@@ -104,7 +104,6 @@ const CONFIG = {
 /* Optional, subject to certain requests not being usable.
   storageHost: example.storage.host.com;
   intercomHost: example.intercom.host.com;
-  notaryHost: example.notary.host.com;
 */
 };
 
@@ -126,7 +125,7 @@ When the wallet is initialized without a pre-generated seed phrase or existing m
 
 Some arguments during the initialization are optional, such as the `initOffline`- which is used to initialize the wallet in an offline state.
 
-The `computeHost` and `intercomHost` interface elements are used to determine the API endpoints for the Compute node, and Intercom server the wallet is supposed to connect to, respectively.
+The `mempoolHost` and `intercomHost` interface elements are used to determine the API endpoints for the Mempool node, and Intercom server the wallet is supposed to connect to, respectively.
 
 A user-defined `passPhrase` needs to be supplied to the wallet during initialization, as this passphrase will be used to encrypt/decrypt data during operations.
 
@@ -189,7 +188,6 @@ const config = {
   mempoolHost: 'example.mempool.host.com',
   storageHost: 'example.storage.host.com';
   intercomHost: 'example.intercom.host.com';
-  notaryHost: 'example.notary.host.com';
 };
 
 // Initialize network configuration when required
@@ -585,7 +583,7 @@ const paymentResult = await make2WayPayment(
 
 ```
 
-**_NB_**: _This type of transaction is a Dual-Double-Entry (DDE) transaction, and requires all parties to reach common consent before their respective transactions are sent to the compute node for processing._
+**_NB_**: _This type of transaction is a Dual-Double-Entry (DDE) transaction, and requires all parties to reach common consent before their respective transactions are sent to the mempool node for processing._
 
 ### Fetching Pending 2-Way Payments
 
@@ -643,7 +641,7 @@ const paymentResult = await make2WayPayment(
                     }
                 },
                 "status": "pending",
-                "computeHost": "http://127.0.0.1:3003"
+                "mempoolHost": "http://127.0.0.1:3003"
             }
         }
     }

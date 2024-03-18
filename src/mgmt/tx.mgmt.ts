@@ -10,7 +10,7 @@ import {
     ICreateTransaction,
     ICreateTxIn,
     ICreateTxPayload,
-    IDdeValues,
+    IDruidValues,
     IErrorInternal,
     IFetchBalanceResponse,
     IKeypair,
@@ -179,7 +179,7 @@ export function getInputsForTx(
  * @param {string} paymentAddress - Address to make the payment to
  * @param {(IAssetToken | IAssetItem)} paymentAsset - The asset to send
  * @param {string} excessAddress - The address to send excess funds/assets to
- * @param {(IDdeValues | null)} druidInfo - DRUID information associated with this transaction
+ * @param {(IDruidValues | null)} druidInfo - DRUID information associated with this transaction
  * @param {([string[], IAssetToken | IAssetItem, ICreateTxIn[]])} txIns - `TxIn` values used in this transaction
  * @return {*}  {IResult<ICreateTxPayload>}
  */
@@ -187,7 +187,7 @@ export function createTx(
     paymentAddress: string,
     paymentAsset: IAssetToken | IAssetItem,
     excessAddress: string,
-    druidInfo: IDdeValues | null,
+    druidInfo: IDruidValues | null,
     txIns: IGetInputsResult,
 ): IResult<ICreateTxPayload> {
     // Inputs obtained for payment from fetching the balance from the network

@@ -63,7 +63,7 @@ export type ITransaction = {
     inputs: ITxIn[];
     outputs: ITxOut[];
     version: number;
-    druid_info: IDdeValues | null;
+    druid_info: IDruidValues | null;
 };
 
 // Transaction input
@@ -87,21 +87,21 @@ export type ITxOut = {
     script_public_key: string | null;
 };
 
-// Dual-double-entry data
-export type IDdeValues = {
+// 2WT data
+export type IDruidValues = {
     druid: string;
     participants: number;
     expectations: IDruidExpectation[];
 };
 
-// Dual-double-entry expectation
+// 2WT expectation
 export type IDruidExpectation = {
     from: string;
     to: string;
     asset: IAssetToken | IAssetItem;
 };
 
-// DDE/DRUID droplet value as stored on mempool node
+// DRUID droplet value as stored on mempool node
 export type IDruidDroplet = {
     participants: number;
     tx: { [key: string]: ITransaction };
@@ -142,7 +142,7 @@ export type ICreateTransaction = {
     inputs: ICreateTxIn[];
     outputs: ITxOut[];
     version: number;
-    druid_info: IDdeValues | null;
+    druid_info: IDruidValues | null;
 };
 
 // Encrypted transaction

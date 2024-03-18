@@ -3,7 +3,7 @@ import { err, ok } from 'neverthrow';
 import {
     IAssetItem,
     ICreateTxPayload,
-    IDdeValues,
+    IDruidValues,
     IDrsTxHashSpecification,
     IDruidExpectation,
     IFetchBalanceResponse,
@@ -92,7 +92,7 @@ export function createIbTxHalf(
     if (txIns.isErr()) return err(txIns.error); /* Inputs for this payment could not be found */
 
     // Construct DRUID info
-    const druidInfo: IDdeValues = {
+    const druidInfo: IDruidValues = {
         druid,
         participants: 2 /* This is a item-based payment, hence two participants */,
         expectations: [senderExpectation],
