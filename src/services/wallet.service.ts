@@ -26,7 +26,7 @@ import {
     createIbTxHalf,
     createItemPayload,
     DEFAULT_HEADERS,
-    RECEIPT_DEFAULT,
+    ITEM_DEFAULT,
     SEED_REGEN_THRES,
 } from '../mgmt';
 import {
@@ -347,14 +347,14 @@ export class Wallet {
      *
      * @param {IKeypairEncrypted} address - Key-pair to use for the creation of the item-assets
      * @param {boolean} [defaultDrsTxHash=true] - Whether to create `Item` assets that contain the default DRS identifier
-     * @param {number} [amount=RECEIPT_DEFAULT] - The amount of `Item` assets to create
+     * @param {number} [amount=ITEM_DEFAULT] - The amount of `Item` assets to create
      * @return {*}  {Promise<IClientResponse>}
      * @memberof Wallet
      */
     public async createItems(
         address: IKeypairEncrypted,
         defaultDrsTxHash = true,
-        amount: number = RECEIPT_DEFAULT,
+        amount: number = ITEM_DEFAULT,
         metadata: string | null = null,
     ): Promise<IClientResponse> {
         try {

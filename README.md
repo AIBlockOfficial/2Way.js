@@ -44,11 +44,11 @@
         <li><a href="#generating-and-testing-seed-phrases">Generating and Testing Seed Phrases</a></li>
         <li><a href="#generating-key-pairs">Generating Key-pairs</a></li>
         <li><a href="#updating-the-balance">Updating the Balance</a></li>
-        <li><a href="#creating-receipt-assets">Creating Item Assets</a></li>
+        <li><a href="#creating-item-assets">Creating Item Assets</a></li>
         <li><a href="#spending-tokens">Spending Tokens</a></li>
-        <li><a href="#spending-receipts">Spending Items</a></li>
-        <li><a href="#fetching-pending-receipt-based-payments">Fetching Pending 2-Way Payments</a></li>
-        <li><a href="#responding-to-pending-receipt-based-payments">Responding to Pending 2-Way Payments</a></li>
+        <li><a href="#spending-items">Spending Items</a></li>
+        <li><a href="#fetching-pending-item-based-payments">Fetching Pending 2-Way Payments</a></li>
+        <li><a href="#responding-to-pending-item-based-payments">Responding to Pending 2-Way Payments</a></li>
       </ul>
     </li>
     <li>
@@ -333,7 +333,7 @@ Since a seed phrase can be used to reconstruct lost/missing key-pairs, it is cus
     {
         "total": {
             "tokens": 0,
-            "receipts": {
+            "items": {
                 "default_drs_tx_hash": 1000,
                 "g7d07...6704b": 1000
             }
@@ -529,7 +529,7 @@ await makeItemPayment(
 
 ```
 
-**_NB_**: _The `makeItemPayment` method is similar to the `makeTokenPayment` in many regards, one of which being the fact that this method will send `Item` assets to a payment address in a unidirectional fashion and does not expect any assets in return. It should not be confused with **receipt-based** payments!_
+**_NB_**: _The `makeItemPayment` method is similar to the `makeTokenPayment` in many regards, one of which being the fact that this method will send `Item` assets to a payment address in a unidirectional fashion and does not expect any assets in return. It should not be confused with **item-based** payments!_
 
 ### Making 2-Way Payments
 
@@ -603,7 +603,7 @@ const paymentResult = await make2WayPayment(
     // All encrypted transactions
     const allEncryptedTxs = getAllEncryptedTxs();
 
-    // Fetch pending receipt-based payments
+    // Fetch pending item-based payments
     const pending2WayPaymentsResult = await wallet.fetchPending2WayPayments(
           allKeypairs,
           allEncryptedTxs:,
@@ -647,7 +647,7 @@ const paymentResult = await make2WayPayment(
     }
     ```
 
-    From this data structure we're able to obtain specific details about the receipt-based payment, such as the unique identifier `DRUID0xd0f407436f7f1fc494d7aee22939090e`, the status of the transaction `status`, the timestamp of the transaction `timestamp`, as well as the address that made the receipt-based payment request- `2a646...f8b98`.
+    From this data structure we're able to obtain specific details about the item-based payment, such as the unique identifier `DRUID0xd0f407436f7f1fc494d7aee22939090e`, the status of the transaction `status`, the timestamp of the transaction `timestamp`, as well as the address that made the item-based payment request- `2a646...f8b98`.
 
     We are also able to see that in this specific request, the sender expects 1 `Item` asset in exchange for 25200 `Token` assets.
     </details>
@@ -664,7 +664,7 @@ const paymentResult = await make2WayPayment(
     // Initialize the wallet correctly
     ...
 
-    // Fetch the pending receipt-based payments from the network
+    // Fetch the pending item-based payments from the network
     ...
     const pending2WayPayments: IFetchPendingRbResponse = pending2WayPaymentsResult.content.fetchPendingRbResponse;
 
@@ -672,12 +672,12 @@ const paymentResult = await make2WayPayment(
     ...
     const allKeypairs = getKeyPairs();
 
-    // Accept a receipt-based payment using its unique `DRUID` identifier
+    // Accept a item-based payment using its unique `DRUID` identifier
     await wallet.accept2WayPayment('DRUID0xd0f407436f7f1fc494d7aee22939090e', pending2WayPayments, allKeypairs);
 
     <!-- --------------------------------- OR ---------------------------------- -->
 
-    // Reject a receipt-based payment using its unique `DRUID` identifier
+    // Reject a item-based payment using its unique `DRUID` identifier
     await wallet.reject2WayPayment('DRUID0xd0f407436f7f1fc494d7aee22939090e', pending2WayPayments, allKeypairs);
     ```
 
