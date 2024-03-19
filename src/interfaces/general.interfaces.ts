@@ -83,7 +83,7 @@ export type IOutPoint = {
 export type ITxOut = {
     value: IAssetToken | IAssetItem;
     locktime: number;
-    drs_block_hash: string | null;
+    genesis_hash: string | null;
     script_public_key: string | null;
 };
 

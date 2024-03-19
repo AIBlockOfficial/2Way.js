@@ -52,13 +52,13 @@ test('create transaction for a token amount', () => {
                 {
                     value: { Token: 1050 } /* Amount payed */,
                     locktime: 0,
-                    drs_block_hash: null,
+                    genesis_hash: null,
                     script_public_key: 'payment_address',
                 },
                 {
                     value: { Token: 10 } /* Change/excess */,
                     locktime: 0,
-                    drs_block_hash: null,
+                    genesis_hash: null,
                     script_public_key: 'excess_address',
                 },
             ]);

@@ -204,7 +204,7 @@ export function createTx(
         {
             value: paymentAsset,
             locktime: 0,
-            drs_block_hash: null,
+            genesis_hash: null,
             script_public_key: paymentAddress,
         },
     ];
@@ -219,7 +219,7 @@ export function createTx(
         outputs.push({
             value: excessAmount.value,
             locktime: 0,
-            drs_block_hash: null,
+            genesis_hash: null,
             script_public_key: excessAddress,
         });
     }

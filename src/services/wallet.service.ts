@@ -346,7 +346,7 @@ export class Wallet {
      *  Create item-assets for a provided address/key-pair
      *
      * @param {IKeypairEncrypted} address - Key-pair to use for the creation of the item-assets
-     * @param {boolean} [defaultGenesisHash=true] - Whether to create `Item` assets that contain the default DRS identifier
+     * @param {boolean} [defaultGenesisHash=true] - Whether to create `Item` assets that contain the default genesis tx hash identifier
      * @param {number} [amount=ITEM_DEFAULT] - The amount of `Item` assets to create
      * @return {*}  {Promise<IClientResponse>}
      * @memberof Wallet
@@ -478,7 +478,7 @@ export class Wallet {
      *
      * @param {string} paymentAddress - Address to make the payment to
      * @param {number} paymentAmount - Payment amount
-     * @param {string} GenesisHash - Genesis transaction hash
+     * @param {string} genesisHash - Genesis transaction hash
      * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
      * @param {IKeypairEncrypted} excessKeypair - Key-pair (encrypted) to assign excess funds to
      * @return {*}  {Promise<IClientResponse>}
@@ -487,13 +487,13 @@ export class Wallet {
     async makeItemPayment(
         paymentAddress: string,
         paymentAmount: number,
-        GenesisHash: string,
+        genesisHash: string,
         allKeypairs: IKeypairEncrypted[],
         excessKeypair: IKeypairEncrypted,
         metadata: string | null = null,
     ): Promise<IClientResponse> {
         const paymentAsset = initIAssetItem({
-            Item: { amount: paymentAmount, genesis_hash: GenesisHash, metadata },
+            Item: { amount: paymentAmount, genesis_hash: genesisHash, metadata },
         });
         return this.makePayment(paymentAddress, paymentAsset, allKeypairs, excessKeypair);
     }

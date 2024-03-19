@@ -127,13 +127,13 @@ test('create transaction for the SEND portion of a item-based payment', () => {
                 {
                     value: { Token: 1050 } /* Amount payed */,
                     locktime: 0,
-                    drs_block_hash: null,
+                    genesis_hash: null,
                     script_public_key: 'their_receive_address',
                 },
                 {
                     value: { Token: 10 } /* Change/excess */,
                     locktime: 0,
-                    drs_block_hash: null,
+                    genesis_hash: null,
                     script_public_key: 'excess_address',
                 },
             ]);
@@ -286,7 +286,7 @@ test('create transaction for the RECEIVE portion of a item-based payment', () =>
                         },
                     } /* Amount payed */,
                     locktime: 0,
-                    drs_block_hash: null,
+                    genesis_hash: null,
                     script_public_key: 'their_receive_address',
                 },
                 {
@@ -298,7 +298,7 @@ test('create transaction for the RECEIVE portion of a item-based payment', () =>
                         },
                     } /* Change/excess */,
                     locktime: 0,
-                    drs_block_hash: null,
+                    genesis_hash: null,
                     script_public_key: 'excess_address',
                 },
             ]);

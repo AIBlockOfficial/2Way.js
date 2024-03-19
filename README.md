@@ -334,7 +334,7 @@ Since a seed phrase can be used to reconstruct lost/missing key-pairs, it is cus
         "total": {
             "tokens": 0,
             "items": {
-                "default_drs_tx_hash": 1000,
+                "default_genesis_hash": 1000,
                 "g7d07...6704b": 1000
             }
         },
@@ -348,7 +348,7 @@ Since a seed phrase can be used to reconstruct lost/missing key-pairs, it is cus
                     "value": {
                         "Item": {
                             "amount": 1000,
-                            "drs_tx_hash": "default_drs_tx_hash"
+                            "genesis_hash": "default_genesis_hash"
                         }
                     }
                 },
@@ -360,7 +360,7 @@ Since a seed phrase can be used to reconstruct lost/missing key-pairs, it is cus
                     "value": {
                         "Item": {
                             "amount": 1000,
-                            "drs_tx_hash": "g7d07...6704b"
+                            "genesis_hash": "g7d07...6704b"
                         }
                     }
                 },
@@ -393,7 +393,7 @@ or complex logic to create.
 | **Argument**     | **Type**            | **Default** | **Required** | **Description**                                                                                                                                                                            |
 | ---------------- | ------------------- | ----------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | address          | `IKeypairEncrypted` |             | yes          | The keypair to generate the address that the Item assets will be sent to once generated                                                                                                 |
-| defaultDrsTxHash | `boolean`           | true        | no           | Setting this to `true` will create generic Items, while setting it to `false` will generate a genesis transaction hash unique to these Items. Use `false` if you want to create NFTs |
+| defaultGenesisHash | `boolean`           | true        | no           | Setting this to `true` will create generic Items, while setting it to `false` will generate a genesis transaction hash unique to these Items. Use `false` if you want to create NFTs |
 | amount           | `number`            | 1000        | no           | The number of Item assets to mint                                                                                                                                                       |
 | metadata         | `string`            | null        | no           | Optional metadata that you can attach to the asset                                                                                                                                         |
 
@@ -408,12 +408,12 @@ const wallet = new Wallet();
 // Address / key-pair to assign the `Item` assets to
 const keyPair = getKeypairs()[0];
 
-// Create `Item` assets that have the default DRS identifier
+// Create `Item` assets that have the default genesis tx hash identifier
 const createItemResponse = await wallet.createItems(keyPair).content.createItemResponse;
 
 <!-- --------------------------------- OR ---------------------------------- -->
 
-// Create `Item` assets that have a unique DRS identifier
+// Create `Item` assets that have a unique genesis tx hash identifier
 const createItemResponse = await wallet.createItems(keyPair, false).content.createItemResponse;
 
 <!-- --------------------------------- ALL ARGUMENTS VERSION ---------------------------------- -->
@@ -428,7 +428,7 @@ const createItemResponse = await wallet.createItems(
 
 ```
 
-`Item` assets can either be assigned to the default digital rights signature (DRS) or a unique DRS. When assets have different DRS identifiers they are **not** mutually interchangeable with each other.
+`Item` assets can either be assigned to the default genesis tx hash or a unique genesis tx hash. When assets have different genesis tx hash identifiers they are **not** mutually interchangeable with each other.
 
   <details>
   <summary>Response Content</summary>
@@ -440,7 +440,7 @@ const createItemResponse = await wallet.createItems(
         "asset": {
             "Item": {
                 "amount": 1000,
-                "drs_tx_hash": "g7d07...6704b"
+                "genesis_hash": "g7d07...6704b"
             }
         },
         "metadata": null
@@ -450,7 +450,7 @@ const createItemResponse = await wallet.createItems(
 }
 ```
 
--   `drs_tx_hash`: The DRS identifier associated with the created `Item` assets.
+-   `genesis_hash`: The genesis hash identifier associated with the created `Item` assets.
 
 </details>
 
@@ -498,7 +498,7 @@ await makeTokenPayment(
 | -------------- | ---------------------- | ----------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------- |
 | paymentAddress | `string`               |             | yes          | Address to make the token payment to                                                                                            |
 | paymentAmount  | `number`               |             | yes          | Amount of tokens to pay                                                                                                         |
-| drsTxHash      | `string`               |             | yes          | The genesis transaction hash of the Item asset to spend. This is the unique identifier of the Item asset                  |
+| genesisHash      | `string`               |             | yes          | The genesis transaction hash of the Item asset to spend. This is the unique identifier of the Item asset                  |
 | allKeypairs    | `IKeypairEncrypted []` |             | yes          | Keypairs to use to make the payment. Must have token balance associated with these keypairs in order to process the transaction |
 | excessKeypair  | `IKeypairEncrypted`    |             | yes          | Excess keypair to send any remaining balance to                                                                                 |
 
@@ -516,13 +516,13 @@ const keyPairs = getKeypairs();
 // Change/excess key-pair
 const changeKeyPair = keyPairs[0];
 
-// DRS identifier (the default DRS identifier or a unique DRS identifier)
-const drsTxHash = "default_drs_tx_hash";
+// Genesis transaction identifier (the default genesis tx hash identifier or a unique genesis tx hash identifier)
+const genesisHash = "default_genesis_hash";
 
 await makeItemPayment(
         "d0e72...85b46", // Payment address
         10,              // Payment amount
-        drsTxHash,       // DRS identifier
+        genesisHash,     // Genesis tx hash identifier
         allKeypairs,     // All key-pairs
         changeKeyPair,   // Excess/change address
     );
@@ -564,7 +564,7 @@ const sendingAsset = initIAssetToken({"Token": 10});
 const receivingAsset = initIAssetItem({
   "Item": {
       "amount": 10,
-      "drs_tx_hash": "default_drs_tx_hash"
+      "genesis_hash": "default_genesis_hash"
   }});
 
 const paymentResult = await make2WayPayment(
@@ -629,7 +629,7 @@ const paymentResult = await make2WayPayment(
                     "asset": {
                         "Item": {
                             "amount": 1,
-                            "drs_tx_hash": "default_drs_tx_hash"
+                            "genesis_hash": "default_genesis_hash"
                         }
                     }
                 },
