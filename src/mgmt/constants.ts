@@ -7,7 +7,7 @@ export const ADDRESS_VERSION_OLD = 1; /* Old (depreciated) address structure */
 export const ADDRESS_VERSION = null; /* Always use `null` for latest address version */
 export const TEMP_ADDRESS_VERSION = 99999; /* Depreciate after temporary addresses have retired */
 export const ITEM_DEFAULT = 1000;
-export const TOKEN_FRACTION = 25200;
+export const TOKEN_FRACTION = 72072000;
 export const DEFAULT_GENESIS_HASH_SPEC = 'default_genesis_hash_spec';
 export const DEFAULT_HEADERS = {
     headers: {
