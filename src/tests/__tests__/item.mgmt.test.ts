@@ -1,5 +1,10 @@
 /* eslint-disable jest/no-conditional-expect */
-import { IKeypair, IOutPoint, ICreateTxInScript, IGenesisHashSpecification } from '../../interfaces';
+import {
+    IKeypair,
+    IOutPoint,
+    ICreateTxInScript,
+    IGenesisHashSpecification,
+} from '../../interfaces';
 import {
     ADDRESS_VERSION,
     constructTxInsAddress,

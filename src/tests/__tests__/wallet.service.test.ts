@@ -4,7 +4,7 @@ import { Wallet } from '../../services/wallet.service';
 let walletInstance = new Wallet();
 
 beforeEach(() => {
-    jest.setTimeout(60000)
+    jest.setTimeout(60000);
     walletInstance = new Wallet();
 });
 
