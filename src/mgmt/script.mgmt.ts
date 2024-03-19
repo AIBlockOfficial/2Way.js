@@ -99,7 +99,7 @@ export function getFormattedScriptString(script: Script): string {
 }
 
 /**
- * Gets "from" address used in DDEValues
+ * Gets "from" address used in 2 way transaction values
  *
  * @export
  * @param {ICreateTxIn[]} txIns - Transaction inputs
@@ -121,8 +121,8 @@ export function constructTxInsAddress(txIns: ICreateTxIn[]): IResult<string> {
 
                 return previousOutPoint !== null
                     ? `${getFormattedOutPointString(previousOutPoint)}-${getFormattedScriptString(
-                          script.value,
-                      )}`
+                        script.value,
+                    )}`
                     : `null-${getFormattedScriptString(script.value)}`;
             } else {
                 return err(IErrorInternal.UnableToConstructTxIns);

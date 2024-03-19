@@ -575,7 +575,7 @@ export class Wallet {
                 druid,
                 senderExpectation,
                 receiverExpectation,
-                status: 'pending', // Status of the DDE transaction
+                status: 'pending', // Status of the 2 way transaction
                 mempoolHost: this.mempoolHost,
             };
             const sendBody = [
@@ -724,7 +724,7 @@ export class Wallet {
                         this.keyMgmt.decryptTransaction(encryptedTx),
                     );
 
-                    // Ensure this transaction is actually a DDE transaction
+                    // Ensure this transaction is actually a 2 way transaction
                     if (!decryptedTransaction.druid_info)
                         throw new Error(IErrorInternal.NoDRUIDValues);
 

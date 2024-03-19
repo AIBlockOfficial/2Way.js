@@ -46,7 +46,7 @@ export type IContentType = {
 // Content received from mempool node / intercom server API endpoints
 export type IApiContentType = {
     fetchBalanceResponse?: IFetchBalanceResponse;
-    fetchPendingDDEResponse?: IFetchPendingDDEResponse;
+    fetchPending2WayResponse?: IFetchPending2WayResponse;
     createItemResponse?: ICreateItemResponse;
     fetchPendingIbResponse?: IResponseIntercom<IPendingIbTxDetails>;
     debugDataResponse?: IDebugDataResponse;
@@ -129,7 +129,7 @@ export type ICreateItemResponse = {
 };
 
 // `/fetch_pending` endpoint response
-export type IFetchPendingDDEResponse = {
+export type IFetchPending2WayResponse = {
     pending_transactions: { [key: string]: IDruidDroplet[] };
 };
 
@@ -196,7 +196,7 @@ export type IPendingIbTxDetails = {
     druid: string; // Value to bind transactions together
     senderExpectation: IDruidExpectation;
     receiverExpectation: IDruidExpectation;
-    status: 'pending' | 'rejected' | 'accepted'; // Status of the DDE transaction
+    status: 'pending' | 'rejected' | 'accepted'; // Status of the 2 way transaction
     mempoolHost: string; // Correlation between clients; send txs to the same mempool node; chosen by the sender
 };
 

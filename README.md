@@ -583,7 +583,7 @@ const paymentResult = await make2WayPayment(
 
 ```
 
-**_NB_**: _This type of transaction is a Dual-Double-Entry (DDE) transaction, and requires all parties to reach common consent before their respective transactions are sent to the mempool node for processing._
+**_NB_**: _This type of transaction is a 2 way transaction, and requires all parties to reach common consent before their respective transactions are sent to the mempool node for processing._
 
 ### Fetching Pending 2-Way Payments
 
