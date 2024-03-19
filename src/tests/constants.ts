@@ -4,7 +4,7 @@
 /* eslint-disable jest/no-disabled-tests */
 
 import { IFetchBalanceResponse } from '../interfaces';
-import { DEFAULT_DRS_TX_HASH } from '../mgmt';
+import { DEFAULT_GENESIS_HASH_SPEC } from '../mgmt';
 
 export type IAddressListTest = {
     [key: string]: {
@@ -41,7 +41,7 @@ export const ADDRESS_LIST_TEST: IAddressListTest = {
 export const FETCH_BALANCE_RESPONSE_TEST: IFetchBalanceResponse = {
     total: {
         tokens: 1060,
-        items: { default_drs_tx_hash: 3 },
+        items: { default_genesis_hash_spec: 3 },
     },
     address_list: {
         cf0067d6c42463b2c1e4236e9669df546c74b16c0e2ef37114549b2944e05b7c: [
@@ -62,7 +62,7 @@ export const FETCH_BALANCE_RESPONSE_TEST: IFetchBalanceResponse = {
                 value: {
                     Item: {
                         amount: 3,
-                        drs_tx_hash: DEFAULT_DRS_TX_HASH,
+                        genesis_hash: DEFAULT_GENESIS_HASH_SPEC,
                         metadata: "{'test': 'test'}",
                     },
                 },

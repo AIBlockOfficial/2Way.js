@@ -1,10 +1,10 @@
 /* eslint-disable jest/no-conditional-expect */
-import { IKeypair, IOutPoint, ICreateTxInScript, IDrsTxHashSpecification } from '../../interfaces';
+import { IKeypair, IOutPoint, ICreateTxInScript, IGenesisHashSpecification } from '../../interfaces';
 import {
     ADDRESS_VERSION,
     constructTxInsAddress,
     constructTxInSignableAssetHash,
-    DEFAULT_DRS_TX_HASH,
+    DEFAULT_GENESIS_HASH_SPEC,
     generateDRUID,
     getInputsForTx,
 } from '../../mgmt';
@@ -49,8 +49,8 @@ test('creates a valid payload to create items', () => {
             signature:
                 '277d56770697ba1f6cec5e859aa4dcdff0ec4a261c75408092d44a38e768461a45fc0a7964ecb4714eb2849b0cd4c43e107db76f8a62c6b783342a895889b80c',
             version: null,
-            drs_tx_hash_spec:
-                IDrsTxHashSpecification.Default /* Create generic Item assets instead of a tracked Item assets */,
+            genesis_hash_spec:
+                IGenesisHashSpecification.Default /* Create generic Item assets instead of a tracked Item assets */,
             metadata: null,
         });
     }
@@ -63,8 +63,8 @@ test('creates a valid payload to create items', () => {
             signature:
                 '277d56770697ba1f6cec5e859aa4dcdff0ec4a261c75408092d44a38e768461a45fc0a7964ecb4714eb2849b0cd4c43e107db76f8a62c6b783342a895889b80c',
             version: null,
-            drs_tx_hash_spec:
-                IDrsTxHashSpecification.Default /* Create generic Item assets instead of a tracked Item assets */,
+            genesis_hash_spec:
+                IGenesisHashSpecification.Default /* Create generic Item assets instead of a tracked Item assets */,
             metadata: "{'test': 'test'}",
         });
     }
@@ -88,7 +88,7 @@ test('create transaction for the SEND portion of a item-based payment', () => {
             asset: {
                 Item: {
                     amount: 1,
-                    drs_tx_hash: DEFAULT_DRS_TX_HASH,
+                    genesis_hash: DEFAULT_GENESIS_HASH_SPEC,
                     metadata: "{'test': 'test'}",
                 },
             },
@@ -209,7 +209,7 @@ test('create transaction for the SEND portion of a item-based payment', () => {
                             asset: {
                                 Item: {
                                     amount: 1,
-                                    drs_tx_hash: DEFAULT_DRS_TX_HASH,
+                                    genesis_hash: DEFAULT_GENESIS_HASH_SPEC,
                                     metadata: "{'test': 'test'}",
                                 },
                             },
@@ -249,7 +249,7 @@ test('create transaction for the RECEIVE portion of a item-based payment', () =>
             asset: {
                 Item: {
                     amount: 1,
-                    drs_tx_hash: DEFAULT_DRS_TX_HASH,
+                    genesis_hash: DEFAULT_GENESIS_HASH_SPEC,
                     metadata: null,
                 },
             },
@@ -281,7 +281,7 @@ test('create transaction for the RECEIVE portion of a item-based payment', () =>
                     value: {
                         Item: {
                             amount: 1,
-                            drs_tx_hash: DEFAULT_DRS_TX_HASH,
+                            genesis_hash: DEFAULT_GENESIS_HASH_SPEC,
                             metadata: null,
                         },
                     } /* Amount payed */,
@@ -293,7 +293,7 @@ test('create transaction for the RECEIVE portion of a item-based payment', () =>
                     value: {
                         Item: {
                             amount: 2,
-                            drs_tx_hash: DEFAULT_DRS_TX_HASH,
+                            genesis_hash: DEFAULT_GENESIS_HASH_SPEC,
                             metadata: null,
                         },
                     } /* Change/excess */,
@@ -387,8 +387,8 @@ test('creates a valid signable asset hash value', () => {
             initIAssetItem({
                 Item: {
                     amount: 1,
-                    drs_tx_hash:
-                        DEFAULT_DRS_TX_HASH /* Value is currently not used to generate signable hash */,
+                    genesis_hash:
+                        DEFAULT_GENESIS_HASH_SPEC /* Value is currently not used to generate signable hash */,
                     metadata: "{'test': 'test'}",
                 },
             }),

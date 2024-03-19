@@ -10,7 +10,7 @@ import {
     IMakePaymentResponse,
 } from '../interfaces';
 
-import { DEFAULT_DRS_TX_HASH } from '../mgmt/constants';
+import { DEFAULT_GENESIS_HASH_SPEC } from '../mgmt/constants';
 
 /* -------------------------------------------------------------------------- */
 /*                      Utilities for Custom Type Guards                      */
@@ -45,7 +45,7 @@ export function initIAssetItem(options?: Partial<IAssetItem>): IAssetItem {
     const defaults: IAssetItem = {
         Item: {
             amount: 0,
-            drs_tx_hash: DEFAULT_DRS_TX_HASH,
+            genesis_hash: DEFAULT_GENESIS_HASH_SPEC,
             metadata: null,
         },
     };
@@ -119,12 +119,12 @@ export const addLhsAssetToRhsAsset = (
     } else if (
         isOfTypeIAssetItem(lhs) &&
         isOfTypeIAssetItem(rhs) &&
-        lhs.Item.drs_tx_hash === rhs.Item.drs_tx_hash
+        lhs.Item.genesis_hash === rhs.Item.genesis_hash
     ) {
         const returnValue: IAssetItem = {
             Item: {
                 amount: lhs.Item.amount + rhs.Item.amount,
-                drs_tx_hash: lhs.Item.drs_tx_hash,
+                genesis_hash: lhs.Item.genesis_hash,
                 metadata: lhs.Item.metadata,
             },
         };
@@ -158,13 +158,13 @@ export const subRhsAssetFromLhsAsset = (
     } else if (
         isOfTypeIAssetItem(lhs) &&
         isOfTypeIAssetItem(rhs) &&
-        lhs.Item.drs_tx_hash === rhs.Item.drs_tx_hash &&
+        lhs.Item.genesis_hash === rhs.Item.genesis_hash &&
         lhsAssetGreaterOrEq.value
     ) {
         const returnValue: IAssetItem = {
             Item: {
                 amount: lhs.Item.amount - rhs.Item.amount,
-                drs_tx_hash: lhs.Item.drs_tx_hash,
+                genesis_hash: lhs.Item.genesis_hash,
                 metadata: null,
             },
         };
@@ -187,7 +187,7 @@ export const lhsAssetIsEqOrGreaterThanRhsAsset = (
     else if (
         isOfTypeIAssetItem(lhs) &&
         isOfTypeIAssetItem(rhs) &&
-        lhs.Item.drs_tx_hash === rhs.Item.drs_tx_hash
+        lhs.Item.genesis_hash === rhs.Item.genesis_hash
     )
         return ok(lhs.Item.amount >= rhs.Item.amount);
     else return err(IErrorInternal.AssetsIncompatible);
@@ -208,7 +208,7 @@ export const lhsAssetIsGreaterThanRhsAsset = (
     else if (
         isOfTypeIAssetItem(lhs) &&
         isOfTypeIAssetItem(rhs) &&
-        lhs.Item.drs_tx_hash === rhs.Item.drs_tx_hash
+        lhs.Item.genesis_hash === rhs.Item.genesis_hash
     )
         return ok(lhs.Item.amount > rhs.Item.amount);
     else return err(IErrorInternal.AssetsIncompatible);
@@ -229,7 +229,7 @@ export const lhsAssetIsLessThanRhsAsset = (
     else if (
         isOfTypeIAssetItem(lhs) &&
         isOfTypeIAssetItem(rhs) &&
-        lhs.Item.drs_tx_hash === rhs.Item.drs_tx_hash
+        lhs.Item.genesis_hash === rhs.Item.genesis_hash
     )
         return ok(lhs.Item.amount < rhs.Item.amount);
     else return err(IErrorInternal.AssetsIncompatible);
@@ -304,7 +304,7 @@ export const assetsAreBothCompatibleItems = (
     if (
         isOfTypeIAssetItem(lhs) &&
         isOfTypeIAssetItem(rhs) &&
-        lhs.Item.drs_tx_hash === rhs.Item.drs_tx_hash
+        lhs.Item.genesis_hash === rhs.Item.genesis_hash
     )
         return ok([lhs, rhs]);
     else return err(IErrorInternal.AssetsIncompatible);

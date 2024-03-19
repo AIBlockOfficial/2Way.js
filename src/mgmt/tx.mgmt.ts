@@ -62,7 +62,7 @@ export function getInputsForTx(
     const enoughRunningTotal = isOfTypeAssetToken
         ? paymentAsset.Token <= fetchBalanceResponse.total.tokens
         : paymentAsset.Item.amount <=
-        fetchBalanceResponse.total.items[paymentAsset.Item.drs_tx_hash];
+        fetchBalanceResponse.total.items[paymentAsset.Item.genesis_hash];
 
     if (enoughRunningTotal) {
         // Initialize the total amount gathered; apply DRS transaction hash where required
@@ -71,7 +71,7 @@ export function getInputsForTx(
             : initIAssetItem({
                 Item: {
                     amount: 0,
-                    drs_tx_hash: paymentAsset.Item.drs_tx_hash || '',
+                    genesis_hash: paymentAsset.Item.genesis_hash || '',
                     metadata: paymentAsset.Item.metadata || null,
                 },
             });

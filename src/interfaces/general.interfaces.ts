@@ -111,7 +111,7 @@ export type IDruidDroplet = {
 export type IAssetItem = {
     Item: {
         amount: number;
-        drs_tx_hash: string;
+        genesis_hash: string;
         metadata: string | null;
     };
 };

@@ -22,7 +22,7 @@ import {
 } from '../../utils';
 import { sha3_256 } from 'js-sha3';
 import { IKeypair, IResponseIntercom, IPendingIbTxDetails } from '../../interfaces';
-import { DEFAULT_DRS_TX_HASH } from '../../mgmt';
+import { DEFAULT_GENESIS_HASH_SPEC } from '../../mgmt';
 import { initIDruidExpectation } from '../../utils';
 
 /* -------------------------------------------------------------------------- */
@@ -48,13 +48,13 @@ test('validate asset type guards', () => {
     const assetToken_2 = initIAssetToken({ Token: 2 });
     const assetItem_1 = initIAssetItem();
     const assetItem_2 = initIAssetItem({
-        Item: { amount: 1, drs_tx_hash: 'unique_drs_tx_hash', metadata: "{'test': 'test'}" },
+        Item: { amount: 1, genesis_hash: 'unique_genesis_hash', metadata: "{'test': 'test'}" },
     });
     const assetItem_3 = initIAssetItem({
-        Item: { amount: 2, drs_tx_hash: 'unique_drs_tx_hash', metadata: "{'test': 'test'}" },
+        Item: { amount: 2, genesis_hash: 'unique_genesis_hash', metadata: "{'test': 'test'}" },
     });
     const assetItem_4 = initIAssetItem({
-        Item: { amount: 3, drs_tx_hash: DEFAULT_DRS_TX_HASH, metadata: "{'test': 'test'}" },
+        Item: { amount: 3, genesis_hash: DEFAULT_GENESIS_HASH_SPEC, metadata: "{'test': 'test'}" },
     });
 
     /* ------------------------- Individual type guards ------------------------- */
@@ -81,7 +81,7 @@ test('validate asset type guards', () => {
     expect(assetsAreCompatible(assetToken_2, assetToken_1)).toBe(true);
     expect(assetsAreCompatible(assetToken_2, assetToken_1)).toBe(true);
 
-    // `Item` assets are only compatible if they exhibit the same `drs_tx_hash`
+    // `Item` assets are only compatible if they exhibit the same `genesis_hash`
     expect(assetsAreCompatible(assetItem_1, assetItem_2)).toBe(false);
     expect(assetsAreCompatible(assetItem_1, assetItem_3)).toBe(false);
     expect(assetsAreCompatible(assetItem_1, assetItem_4)).toBe(true);
@@ -138,22 +138,22 @@ test('validate correct value amount and mathematical operation between assets', 
 
     /* ----------------------- `Item` asset operations ----------------------- */
     const assetItem_1 = initIAssetItem({
-        Item: { amount: 1, drs_tx_hash: DEFAULT_DRS_TX_HASH, metadata: "{'test': 'test'}" },
+        Item: { amount: 1, genesis_hash: DEFAULT_GENESIS_HASH_SPEC, metadata: "{'test': 'test'}" },
     });
     const assetItem_2 = initIAssetItem({
-        Item: { amount: 10, drs_tx_hash: DEFAULT_DRS_TX_HASH, metadata: "{'test': 'test'}" },
+        Item: { amount: 10, genesis_hash: DEFAULT_GENESIS_HASH_SPEC, metadata: "{'test': 'test'}" },
     });
     const assetItem_3 = initIAssetItem({
-        Item: { amount: 10, drs_tx_hash: DEFAULT_DRS_TX_HASH, metadata: "{'test': 'test'}" },
+        Item: { amount: 10, genesis_hash: DEFAULT_GENESIS_HASH_SPEC, metadata: "{'test': 'test'}" },
     });
     const assetItem_4 = initIAssetItem({
-        Item: { amount: 1, drs_tx_hash: 'unique_drs_tx_hash', metadata: "{'test': 'test'}" },
+        Item: { amount: 1, genesis_hash: 'unique_genesis_hash', metadata: "{'test': 'test'}" },
     });
     const assetItem_5 = initIAssetItem({
-        Item: { amount: 10, drs_tx_hash: 'unique_drs_tx_hash', metadata: "{'test': 'test'}" },
+        Item: { amount: 10, genesis_hash: 'unique_genesis_hash', metadata: "{'test': 'test'}" },
     });
     const assetItem_6 = initIAssetItem({
-        Item: { amount: 10, drs_tx_hash: 'unique_drs_tx_hash', metadata: "{'test': 'test'}" },
+        Item: { amount: 10, genesis_hash: 'unique_genesis_hash', metadata: "{'test': 'test'}" },
     });
 
     /*
@@ -161,11 +161,11 @@ test('validate correct value amount and mathematical operation between assets', 
      */
     // Subtract assetItem_1 from assetItem_2
     expect(throwIfErr(subRhsAssetFromLhsAsset(assetItem_2, assetItem_1))).toStrictEqual({
-        Item: { amount: 9, drs_tx_hash: DEFAULT_DRS_TX_HASH, metadata: null },
+        Item: { amount: 9, genesis_hash: DEFAULT_GENESIS_HASH_SPEC, metadata: null },
     });
     // Add assetItem_1 to assetItem_2
     expect(throwIfErr(addLhsAssetToRhsAsset(assetItem_2, assetItem_1))).toStrictEqual({
-        Item: { amount: 11, drs_tx_hash: DEFAULT_DRS_TX_HASH, metadata: "{'test': 'test'}" },
+        Item: { amount: 11, genesis_hash: DEFAULT_GENESIS_HASH_SPEC, metadata: "{'test': 'test'}" },
     });
     // Test assetItem_1 < assetItem_2
     expect(throwIfErr(lhsAssetIsLessThanRhsAsset(assetItem_1, assetItem_2))).toBe(true);

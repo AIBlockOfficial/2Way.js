@@ -4,7 +4,7 @@ import {
     IAssetItem,
     ICreateTxPayload,
     IDruidValues,
-    IDrsTxHashSpecification,
+    IGenesisHashSpecification,
     IDruidExpectation,
     IFetchBalanceResponse,
     IKeypair,
@@ -29,7 +29,7 @@ import { createTx, getInputsForTx } from './tx.mgmt';
  * @param {Uint8Array} pubKey - Public key as Uint8Array
  * @param {(number | null)} version - Address version
  * @param {number} [amount=ITEM_DEFAULT] - Amount of the asset to create
- * @param {boolean} [default_drs_tx_hash=true] - Whether to use the default DRS transaction hash
+ * @param {boolean} [default_genesis_hash_spec=true] - Whether to use the default DRS transaction hash
  * @param {string | null} [metadata=null] - Metadata to be included in the asset
  * @return {*}  {IResult<IItemCreationAPIPayload>}
  */
@@ -38,7 +38,7 @@ export function createItemPayload(
     pubKey: Uint8Array,
     version: number | null,
     amount: number = ITEM_DEFAULT,
-    default_drs_tx_hash = true,
+    default_genesis_hash_spec = true, //genesis_hash_spec
     metadata: string | null = null,
 ): IResult<IItemCreationAPIPayload> {
     const address = constructAddress(pubKey, version);
@@ -46,7 +46,7 @@ export function createItemPayload(
     const asset: IAssetItem = {
         Item: {
             amount,
-            drs_tx_hash: '', // TODO: Change this if signable data for creating item assets changes; currently not used to create signable data
+            genesis_hash: '', // TODO: Change this if signable data for creating item assets changes; currently not used to create signable data
             metadata,
         },
     };
@@ -58,9 +58,9 @@ export function createItemPayload(
         public_key: Buffer.from(pubKey).toString('hex'),
         signature: Buffer.from(signature).toString('hex'),
         version: version,
-        drs_tx_hash_spec: default_drs_tx_hash
-            ? IDrsTxHashSpecification.Default
-            : IDrsTxHashSpecification.Create,
+        genesis_hash_spec: default_genesis_hash_spec
+            ? IGenesisHashSpecification.Default
+            : IGenesisHashSpecification.Create,
         metadata,
     });
 }

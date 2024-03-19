@@ -8,7 +8,7 @@ export const ADDRESS_VERSION = null; /* Always use `null` for latest address ver
 export const TEMP_ADDRESS_VERSION = 99999; /* Depreciate after temporary addresses have retired */
 export const ITEM_DEFAULT = 1000;
 export const TOKEN_FRACTION = 25200;
-export const DEFAULT_DRS_TX_HASH = 'default_drs_tx_hash';
+export const DEFAULT_GENESIS_HASH_SPEC = 'default_genesis_hash_spec';
 export const DEFAULT_HEADERS = {
     headers: {
         'Content-Type': 'application/json',

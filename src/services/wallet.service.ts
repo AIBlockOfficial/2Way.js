@@ -346,14 +346,14 @@ export class Wallet {
      *  Create item-assets for a provided address/key-pair
      *
      * @param {IKeypairEncrypted} address - Key-pair to use for the creation of the item-assets
-     * @param {boolean} [defaultDrsTxHash=true] - Whether to create `Item` assets that contain the default DRS identifier
+     * @param {boolean} [defaultGenesisHash=true] - Whether to create `Item` assets that contain the default DRS identifier
      * @param {number} [amount=ITEM_DEFAULT] - The amount of `Item` assets to create
      * @return {*}  {Promise<IClientResponse>}
      * @memberof Wallet
      */
     public async createItems(
         address: IKeypairEncrypted,
-        defaultDrsTxHash = true,
+        defaultGenesisHash = true,
         amount: number = ITEM_DEFAULT,
         metadata: string | null = null,
     ): Promise<IClientResponse> {
@@ -368,17 +368,15 @@ export class Wallet {
                     keyPair.publicKey,
                     keyPair.version,
                     amount,
-                    defaultDrsTxHash,
+                    defaultGenesisHash,
                     metadata,
                 ),
             );
-
             // Generate needed headers
             const headers = this.getRequestIdAndNonceHeadersForRoute(
                 this.mempoolRoutesPoW,
                 IAPIRoute.CreateItemAsset,
             );
-
             return await axios
                 .post<INetworkResponse>(
                     `${this.mempoolHost}${IAPIRoute.CreateItemAsset}`,
@@ -476,11 +474,11 @@ export class Wallet {
     }
 
     /**
-     * Make a `Item` payment of a specified amount and `drs_tx_hash`
+     * Make a `Item` payment of a specified amount and `genesis_hash`
      *
      * @param {string} paymentAddress - Address to make the payment to
      * @param {number} paymentAmount - Payment amount
-     * @param {string} drsTxHash - DRS transaction hash
+     * @param {string} GenesisHash - Genesis transaction hash
      * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
      * @param {IKeypairEncrypted} excessKeypair - Key-pair (encrypted) to assign excess funds to
      * @return {*}  {Promise<IClientResponse>}
@@ -489,13 +487,13 @@ export class Wallet {
     async makeItemPayment(
         paymentAddress: string,
         paymentAmount: number,
-        drsTxHash: string,
+        GenesisHash: string,
         allKeypairs: IKeypairEncrypted[],
         excessKeypair: IKeypairEncrypted,
         metadata: string | null = null,
     ): Promise<IClientResponse> {
         const paymentAsset = initIAssetItem({
-            Item: { amount: paymentAmount, drs_tx_hash: drsTxHash, metadata },
+            Item: { amount: paymentAmount, genesis_hash: GenesisHash, metadata },
         });
         return this.makePayment(paymentAddress, paymentAsset, allKeypairs, excessKeypair);
     }

@@ -135,7 +135,7 @@ export type IFetchPendingDDEResponse = {
 
 /* --------------------------- Payload Structures --------------------------- */
 
-export enum IDrsTxHashSpecification {
+export enum IGenesisHashSpecification {
     Create = 'Create',
     Default = 'Default',
 }
@@ -147,7 +147,7 @@ export type IItemCreationAPIPayload = {
     public_key: string;
     signature: string;
     version: number | null;
-    drs_tx_hash_spec: IDrsTxHashSpecification;
+    genesis_hash_spec: IGenesisHashSpecification;
 };
 // `/create_transactions` payload structure
 export type ICreateTxPayload = {

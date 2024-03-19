@@ -285,7 +285,7 @@ export const formatAssetStructures = (
 ): IResult<IPendingIbTxDetails> => {
     const defaults = {
         amount: 0,
-        drs_tx_hash: null,
+        genesis_hash: null,
         metadata: null,
     };
 
