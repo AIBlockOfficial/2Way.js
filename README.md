@@ -11,7 +11,7 @@
   <h3 align="center">2Way.js</h3>
 
   <div>
-  <img src="https://img.shields.io/github/actions/workflow/status/AIBlockOfficial/2Way.js/.github/workflows/codeql-analysis.yml?branch=main" alt="Pipeline Status" style="display:inline-block"/>
+  <img src="https://img.shields.io/github/actions/workflow/status/AIBlockOfficial/2Way.js/.github/workflows/codeql.yml?branch=main" alt="Pipeline Status" style="display:inline-block"/>
   <img src="https://img.shields.io/npm/v/@2waychain/2wayjs" alt="Pipeline Status" style="display:inline-block"/>
   </div>
 
