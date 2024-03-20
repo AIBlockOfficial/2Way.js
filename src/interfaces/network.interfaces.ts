@@ -43,12 +43,12 @@ export type IContentType = {
     getKeypairsResponse?: IKeypairEncrypted[];
 } & IApiContentType;
 
-// Content received from mempool node / intercom server API endpoints
+// Content received from mempool node / valence server API endpoints
 export type IApiContentType = {
     fetchBalanceResponse?: IFetchBalanceResponse;
     fetchPending2WayResponse?: IFetchPending2WayResponse;
     createItemResponse?: ICreateItemResponse;
-    fetchPendingIbResponse?: IResponseIntercom<IPendingIbTxDetails>;
+    fetchPendingIbResponse?: IResponseValence<IPendingIbTxDetails>;
     debugDataResponse?: IDebugDataResponse;
     fetchTransactionsResponse?: IFetchTransactionsResponse;
     makePaymentResponse?: IMakePaymentResponse;
@@ -63,10 +63,10 @@ export enum IAPIRoute {
     FetchPending = '/fetch_pending',
     /* --------------------------- Storage Network Routes --------------------------- */
     BlockchainEntry = '/blockchain_entry',
-    /* ----------------------------- Intercom Routes ---------------------------- */
-    IntercomSet = '/set_data',
-    IntercomGet = '/get_data',
-    IntercomDel = '/del_data',
+    /* ----------------------------- Valence Routes ---------------------------- */
+    ValenceSet = '/set_data',
+    ValenceGet = '/get_data',
+    ValenceDel = '/del_data',
 }
 
 /* -------------------------------------------------------------------------- */
@@ -157,15 +157,15 @@ export type ICreateTxPayload = {
 };
 
 /* -------------------------------------------------------------------------- */
-/*                          Intercom Interfaces                         */
+/*                          Valence Interfaces                         */
 /* -------------------------------------------------------------------------- */
 
-export type IResponseIntercom<T> = {
+export type IResponseValence<T> = {
     // Address that placed the data : IRedisFieldEntry<T>;
     [key: string]: IRedisFieldEntry<T>;
 };
 
-export type IRequestIntercomSetBody<T> = {
+export type IRequestValenceSetBody<T> = {
     key: string;
     field: string;
     publicKey: string;
@@ -173,14 +173,14 @@ export type IRequestIntercomSetBody<T> = {
     value: T;
 };
 
-export type IRequestIntercomDelBody = {
+export type IRequestValenceDelBody = {
     key: string;
     field: string;
     publicKey: string;
     signature: string;
 };
 
-export type IRequestIntercomGetBody = {
+export type IRequestValenceGetBody = {
     key: string;
     publicKey: string;
     signature: string;
@@ -191,7 +191,7 @@ export type IRedisFieldEntry<T> = {
     value: T;
 };
 
-// NOTE: This data structure can be changed to anything and it will still be supported by the intercom server
+// NOTE: This data structure can be changed to anything and it will still be supported by the valence server
 export type IPendingIbTxDetails = {
     druid: string; // Value to bind transactions together
     senderExpectation: IDruidExpectation;

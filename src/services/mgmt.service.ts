@@ -473,6 +473,24 @@ export class mgmtClient {
         return ok(Array.from(foundAddr.values()));
     }
 
+    public signAddr(keypair: IKeypair, addr: string): IResult<string> {
+        const signature = getBytesHexString(nacl.sign.detached(Buffer.from(addr), keypair.secretKey));
+        if (!signature) return err(IErrorInternal.UnableToSignMessage);
+        return ok(signature);
+    }
+
+    public verifyAddr(addr: string, signature: string, keypair: IKeypair): IResult<boolean> {
+        if (!signature ||
+            !nacl.sign.detached.verify(
+                Buffer.from(addr),
+                getHexStringBytes(signature),
+                keypair.publicKey,
+            )
+        ) return err(IErrorInternal.UnableToVerifyMessage);
+        return ok(true);
+    }
+
+
     /**
      * Sign a given message with an array of keypairs
      *

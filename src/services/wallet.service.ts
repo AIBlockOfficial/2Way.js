@@ -15,9 +15,9 @@ import {
     IMasterKeyEncrypted,
     INetworkResponse,
     IPendingIbTxDetails,
-    IRequestIntercomDelBody,
-    IRequestIntercomGetBody,
-    IResponseIntercom,
+    IRequestValenceDelBody,
+    IRequestValenceGetBody,
+    IResponseValence,
     ISuccessInternal,
 } from '../interfaces';
 import {
@@ -32,12 +32,12 @@ import {
 import {
     castAPIStatus,
     createIdAndNonceHeaders,
-    filterIntercomDataForPredicates,
-    filterValidIntercomData,
+    filterValenceDataForPredicates,
+    filterValidValenceData,
     formatSingleCustomKeyValuePair,
-    generateIntercomDelBody,
-    generateIntercomGetBody,
-    generateIntercomSetBody,
+    generateValenceDelBody,
+    generateValenceGetBody,
+    generateValenceSetBody,
     initIAssetItem,
     initIAssetToken,
     throwIfErr,
@@ -54,7 +54,7 @@ export class Wallet {
     /* -------------------------------------------------------------------------- */
     private mempoolHost: string | undefined;
     private storageHost: string | undefined;
-    private intercomHost: string | undefined;
+    private valenceHost: string | undefined;
     private keyMgmt: mgmtClient | undefined;
     private mempoolRoutesPoW: Map<string, number> | undefined;
     private storageRoutesPoW: Map<string, number> | undefined;
@@ -65,7 +65,7 @@ export class Wallet {
     constructor() {
         this.mempoolHost = undefined;
         this.storageHost = undefined;
-        this.intercomHost = undefined;
+        this.valenceHost = undefined;
         this.keyMgmt = undefined;
         this.mempoolRoutesPoW = undefined;
         this.storageRoutesPoW = undefined;
@@ -221,7 +221,7 @@ export class Wallet {
     public async initNetwork(config: IClientConfig): Promise<IClientResponse> {
         this.mempoolHost = config.mempoolHost;
         this.storageHost = config.storageHost;
-        this.intercomHost = config.intercomHost;
+        this.valenceHost = config.valenceHost;
 
         if (this.mempoolHost == undefined)
             return {
@@ -250,7 +250,7 @@ export class Wallet {
         if (
             this.mempoolHost === undefined &&
             this.storageHost === undefined &&
-            this.intercomHost === undefined
+            this.valenceHost === undefined
         )
             return {
                 status: 'error',
@@ -553,7 +553,7 @@ export class Wallet {
         try {
             if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
                 throw new Error(IErrorInternal.ClientNotInitialized);
-            if (!this.intercomHost) throw new Error(IErrorInternal.IntercomNotInitialized);
+            if (!this.valenceHost) throw new Error(IErrorInternal.ValenceNotInitialized);
             const senderKeypair = throwIfErr(this.keyMgmt.decryptKeypair(receiveAddress));
             const [allAddresses, keyPairMap] = throwIfErr(
                 this.keyMgmt.getAllAddressesAndKeypairMap(allKeypairs),
@@ -576,7 +576,7 @@ export class Wallet {
             };
 
             const receiverExpectation: IDruidExpectation = {
-                from: '', // This is calculated by us after the transaction is created and then sent to the intercom server
+                from: '', // This is calculated by us after the transaction is created and then sent to the valence server
                 to: paymentAddress,
                 asset: sendingAsset,
             };
@@ -597,14 +597,14 @@ export class Wallet {
             // now we encrypt the created transaction for storage
             const encryptedTx = throwIfErr(this.keyMgmt.encryptTransaction(sendIbTxHalf.createTx));
 
-            // Create "sender" details and expectations for intercom server
+            // Create "sender" details and expectations for valence server
             receiverExpectation.from = throwIfErr(
                 constructTxInsAddress(sendIbTxHalf.createTx.inputs),
             );
             if (sendIbTxHalf.createTx.druid_info === null)
                 throw new Error(IErrorInternal.NoDRUIDValues);
 
-            // Generate the values to be placed on the intercom server for the receiving party
+            // Generate the values to be placed on the valence server for the receiving party
             const valuePayload: IPendingIbTxDetails = {
                 druid,
                 senderExpectation,
@@ -613,7 +613,7 @@ export class Wallet {
                 mempoolHost: this.mempoolHost,
             };
             const sendBody = [
-                generateIntercomSetBody(
+                generateValenceSetBody(
                     paymentAddress,
                     senderKeypair.address,
                     senderKeypair,
@@ -621,9 +621,9 @@ export class Wallet {
                 ),
             ];
 
-            // Send the transaction details to the intercom server for the receiving party to inspect
+            // Send the transaction details to the valence server for the receiving party to inspect
             return await axios
-                .post(`${this.intercomHost}${IAPIRoute.IntercomSet}`, sendBody)
+                .post(`${this.valenceHost}${IAPIRoute.ValenceSet}`, sendBody)
                 .then(() => {
                     // Payment now getting processed
                     return {
@@ -653,14 +653,14 @@ export class Wallet {
      * Accept a item-based payment
      *
      * @param {string} druid - Unique DRUID value associated with a item-based payment
-     * @param {IResponseIntercom<IPendingIbTxDetails>} pendingResponse - 2-Way transaction(s) information as received from the intercom server
+     * @param {IResponseValence<IPendingIbTxDetails>} pendingResponse - 2-Way transaction(s) information as received from the valence server
      * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
      * @return {*}  {Promise<IClientResponse>}
      * @memberof Wallet
      */
     public async accept2WayPayment(
         druid: string,
-        pendingResponse: IResponseIntercom<IPendingIbTxDetails>,
+        pendingResponse: IResponseValence<IPendingIbTxDetails>,
         allKeypairs: IKeypairEncrypted[],
     ): Promise<IClientResponse> {
         return this.handleIbTxResponse(druid, pendingResponse, 'accepted', allKeypairs);
@@ -670,7 +670,7 @@ export class Wallet {
      * Reject a item-based payment
      *
      * @param {string} druid - Unique DRUID value associated with a item-based payment
-     * @param {IResponseIntercom<IPendingIbTxDetails>} pendingResponse - 2-Way transaction(s) information as received from the intercom server
+     * @param {IResponseValence<IPendingIbTxDetails>} pendingResponse - 2-Way transaction(s) information as received from the valence server
      * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
      * @return {*}  {Promise<IClientResponse>}
      * @memberof Wallet
@@ -678,14 +678,14 @@ export class Wallet {
 
     public async reject2WayPayment(
         druid: string,
-        pendingResponse: IResponseIntercom<IPendingIbTxDetails>,
+        pendingResponse: IResponseValence<IPendingIbTxDetails>,
         allKeypairs: IKeypairEncrypted[],
     ): Promise<IClientResponse> {
         return this.handleIbTxResponse(druid, pendingResponse, 'rejected', allKeypairs);
     }
 
     /**
-     * Fetch pending item-based payments from the  Intercom server
+     * Fetch pending item-based payments from the valence server
      *
      * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
      * @param {ICreateTransactionEncrypted[]} allEncryptedTxs - A list of all existing saved transactions (encrypted)
@@ -699,7 +699,7 @@ export class Wallet {
         try {
             if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
                 throw new Error(IErrorInternal.ClientNotInitialized);
-            if (!this.intercomHost) throw new Error(IErrorInternal.IntercomNotInitialized);
+            if (!this.valenceHost) throw new Error(IErrorInternal.ValenceNotInitialized);
 
             // Generate a key-pair map
             const [allAddresses, keyPairMap] = throwIfErr(
@@ -710,20 +710,20 @@ export class Wallet {
             const encryptedTxMap = new Map<string, ICreateTransactionEncrypted>();
             allEncryptedTxs.forEach((tx) => encryptedTxMap.set(tx.druid, tx));
 
-            const pendingIntercom: IRequestIntercomGetBody[] = allAddresses
+            const pendingValence: IRequestValenceGetBody[] = allAddresses
                 .map((address) => {
                     if (!this.keyMgmt) return null;
                     const keyPair = keyPairMap.get(address);
                     if (!keyPair) return null;
-                    return generateIntercomGetBody(address, keyPair);
+                    return generateValenceGetBody(address, keyPair);
                 })
-                .filter((input): input is IRequestIntercomGetBody => !!input); /* Filter array */
+                .filter((input): input is IRequestValenceGetBody => !!input); /* Filter array */
 
             // Get all pending RB transactions
             let responseData = await axios
-                .post<IResponseIntercom<IPendingIbTxDetails>>(
-                    `${this.intercomHost}${IAPIRoute.IntercomGet}`,
-                    pendingIntercom,
+                .post<IResponseValence<IPendingIbTxDetails>>(
+                    `${this.valenceHost}${IAPIRoute.ValenceGet}`,
+                    pendingValence,
                 )
                 .then((response) => {
                     return response.data;
@@ -734,16 +734,16 @@ export class Wallet {
                 });
 
             // NB: Validate item-based data and remove garbage entries
-            responseData = filterValidIntercomData(responseData);
+            responseData = filterValidValenceData(responseData);
 
             // Get accepted and rejected item-based transactions
-            const rbDataToDelete: IRequestIntercomDelBody[] = [];
+            const rbDataToDelete: IRequestValenceDelBody[] = [];
             const [acceptedIbTxs, rejectedIbTxs] = [
                 throwIfErr(
-                    filterIntercomDataForPredicates(responseData, { status: 'accepted' }, true),
+                    filterValenceDataForPredicates(responseData, { status: 'accepted' }, true),
                 ),
                 throwIfErr(
-                    filterIntercomDataForPredicates(responseData, { status: 'rejected' }, true),
+                    filterValenceDataForPredicates(responseData, { status: 'rejected' }, true),
                 ),
             ];
 
@@ -762,7 +762,7 @@ export class Wallet {
                     if (!decryptedTransaction.druid_info)
                         throw new Error(IErrorInternal.NoDRUIDValues);
 
-                    // Set `from` address value from recipient by setting the entire expectation to the one received from the intercom server
+                    // Set `from` address value from recipient by setting the entire expectation to the one received from the valence server
                     decryptedTransaction.druid_info.expectations[0] =
                         acceptedTx.value.senderExpectation; /* There should be only one expectation in a item-based payment */
 
@@ -772,7 +772,7 @@ export class Wallet {
                     if (!keyPair) throw new Error(IErrorInternal.UnableToGetKeypair);
 
                     rbDataToDelete.push(
-                        generateIntercomDelBody(
+                        generateValenceDelBody(
                             acceptedTx.value.senderExpectation.to,
                             acceptedTx.value.receiverExpectation.to,
                             keyPair,
@@ -811,7 +811,7 @@ export class Wallet {
                     if (!keyPair) throw new Error(IErrorInternal.UnableToGetKeypair);
 
                     rbDataToDelete.push(
-                        generateIntercomDelBody(
+                        generateValenceDelBody(
                             rejectedTx.value.senderExpectation.to,
                             rejectedTx.value.receiverExpectation.to,
                             keyPair,
@@ -820,10 +820,10 @@ export class Wallet {
                 }
             }
 
-            // Delete item-based data from intercom since the information is no longer relevant (accepted and rejected txs)
+            // Delete item-based data from valence since the information is no longer relevant (accepted and rejected txs)
             if (rbDataToDelete.length > 0)
                 await axios
-                    .post(`${this.intercomHost}${IAPIRoute.IntercomDel}`, rbDataToDelete)
+                    .post(`${this.valenceHost}${IAPIRoute.ValenceDel}`, rbDataToDelete)
                     .catch(async (error) => {
                         if (error instanceof Error) throw new Error(error.message);
                         else throw new Error(`${error}`);
@@ -1141,7 +1141,7 @@ export class Wallet {
      *
      * @private
      * @param {string} druid - Unique DRUID value associated with this payment
-     * @param {IResponseIntercom<IPendingIbTxDetails>} pendingResponse - Pending item-based payments response as received from the intercom server
+     * @param {IResponseValence<IPendingIbTxDetails>} pendingResponse - Pending item-based payments response as received from the valence server
      * @param {('accepted' | 'rejected')} status - Status to se the payment to
      * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
      * @return {*}  {Promise<IClientResponse>}
@@ -1149,14 +1149,14 @@ export class Wallet {
      */
     private async handleIbTxResponse(
         druid: string,
-        pendingResponse: IResponseIntercom<IPendingIbTxDetails>,
+        pendingResponse: IResponseValence<IPendingIbTxDetails>,
         status: 'accepted' | 'rejected',
         allKeypairs: IKeypairEncrypted[],
     ): Promise<IClientResponse> {
         try {
             if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
                 throw new Error(IErrorInternal.ClientNotInitialized);
-            if (!this.intercomHost) throw new Error(IErrorInternal.IntercomNotInitialized);
+            if (!this.valenceHost) throw new Error(IErrorInternal.ValenceNotInitialized);
             const [allAddresses, keyPairMap] = throwIfErr(
                 this.keyMgmt.getAllAddressesAndKeypairMap(allKeypairs),
             );
@@ -1168,7 +1168,7 @@ export class Wallet {
 
             // Find specified DRUID value and entry that is still marked as 'pending'
             const rbDataForDruid = throwIfErr(
-                filterIntercomDataForPredicates<IPendingIbTxDetails>(pendingResponse, {
+                filterValenceDataForPredicates<IPendingIbTxDetails>(pendingResponse, {
                     druid: druid /* Filter for specific DRUID value */,
                     status: 'pending' /* Filter for status which is still 'pending' */,
                 }),
@@ -1230,9 +1230,9 @@ export class Wallet {
                     });
             }
 
-            // Send the updated status of the transaction on the intercom server
+            // Send the updated status of the transaction on the valence server
             const setBody = [
-                generateIntercomSetBody<IPendingIbTxDetails>(
+                generateValenceSetBody<IPendingIbTxDetails>(
                     txInfo.senderExpectation.to,
                     txInfo.receiverExpectation.to,
                     receiverKeypair,
@@ -1240,9 +1240,9 @@ export class Wallet {
                 ),
             ];
 
-            // Update the transaction details on the intercom server
+            // Update the transaction details on the valence server
             await axios
-                .post(`${this.intercomHost}${IAPIRoute.IntercomSet}`, setBody)
+                .post(`${this.valenceHost}${IAPIRoute.ValenceSet}`, setBody)
                 .catch(async (error) => {
                     if (error instanceof Error) throw new Error(error.message);
                     else throw new Error(`${error}`);
@@ -1334,4 +1334,38 @@ export class Wallet {
             },
         };
     }
+
+    /**
+     * Generate a unique request ID as well as the corresponding
+     * nonce required for a route
+     *
+     * @private
+     * @param {string} route
+     * @return {*}  
+     * 
+     * @memberof Wallet
+     */
+    // private _getValenceHeadersForRoute(
+    //     address: string,
+    //     publicKey: string,
+    //     signature: string,
+    // ): {
+    //     headers: {
+    //         'Content-Type': string;
+    //         'address': string;
+    //         'publicKey': string;
+    //         'signature': string;
+    //     };
+    // } {
+    //     return {
+    //         headers: {
+    //             ...DEFAULT_HEADERS.headers,
+    //             ...{
+    //                 'address': address,
+    //                 'publicKey': publicKey,
+    //                 'signature': signature,
+    //             }
+    //         },
+    //     };
+    // }
 }
