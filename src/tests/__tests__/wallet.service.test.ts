@@ -1,4 +1,4 @@
-import { SEED } from '../constants';
+import { SEED, MK } from '../constants';
 import { Wallet } from '../../services/wallet.service';
 
 let walletInstance = new Wallet();
@@ -6,6 +6,27 @@ let walletInstance = new Wallet();
 beforeEach(() => {
     jest.setTimeout(60000);
     walletInstance = new Wallet();
+});
+
+test('init wallet validation', async () => {
+    const config = {
+        mempoolHost: '',
+        storageHost: 'http://37.27.23.104:3001',
+        intercomHost: 'http://0.0.0.0:3030',
+        passphrase: '',
+    };
+
+    await walletInstance.initNew(config).then((res) => {
+        expect(res.status).toBe('error');
+    });
+
+    await walletInstance.fromSeed(SEED, config).then((res) => {
+        expect(res.status).toBe('error');
+    });
+
+    await walletInstance.fromMasterKey(MK, config).then((res) => {
+        expect(res.status).toBe('error');
+    });
 });
 
 test('init wallet without optional config fields', async () => {

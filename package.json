@@ -67,6 +67,7 @@
     "bitcore-lib": "^8.25.25",
     "bitcore-mnemonic": "^8.25.25",
     "byte-base64": "^1.1.0",
+    "joi": "^17.12.3",
     "js-sha3": "^0.8.0",
     "neverthrow": "^4.3.1",
     "tweetnacl": "^1.0.3",
