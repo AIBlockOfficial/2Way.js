@@ -44,6 +44,7 @@ import {
     formatAssetStructures,
     transformCreateTxResponseFromNetwork,
 } from '../utils';
+import { validateConfig, validateMasterKey, validateSeedphrase } from '../utils/validations.utils'
 import { mgmtClient } from './mgmt.service';
 import { ADDRESS_VERSION } from '../mgmt/constants';
 
@@ -79,26 +80,34 @@ export class Wallet {
      * @memberof Wallet
      */
     public async initNew(config: IClientConfig, initOffline = false): Promise<IClientResponse> {
-        this.keyMgmt = new mgmtClient();
-        const initIResult = this.keyMgmt.initNew(config.passphrase);
-        if (!initOffline) {
-            const initNetworkIResult = await this.initNetwork(config);
-            if (initNetworkIResult.status === 'error') {
-                return initNetworkIResult; // Return network error
+        const valid = validateConfig(config)
+        if (!valid.error) {
+            this.keyMgmt = new mgmtClient();
+            const initIResult = this.keyMgmt.initNew(config.passphrase);
+            if (!initOffline) {
+                const initNetworkIResult = await this.initNetwork(config);
+                if (initNetworkIResult.status === 'error') {
+                    return initNetworkIResult; // Return network error
+                }
             }
-        }
-        if (initIResult.isErr()) {
-            return {
-                status: 'error',
-                reason: initIResult.error, // Return initialization error
-            } as IClientResponse;
+            if (initIResult.isErr()) {
+                return {
+                    status: 'error',
+                    reason: initIResult.error, // Return initialization error
+                } as IClientResponse;
+            } else {
+                return {
+                    status: 'success',
+                    reason: ISuccessInternal.ClientInitialized,
+                    content: {
+                        initNewResponse: initIResult.value,
+                    },
+                } as IClientResponse;
+            }
         } else {
             return {
-                status: 'success',
-                reason: ISuccessInternal.ClientInitialized,
-                content: {
-                    initNewResponse: initIResult.value,
-                },
+                status: 'error',
+                reason: valid.error?.message, // Return validation error
             } as IClientResponse;
         }
     }
@@ -117,24 +126,32 @@ export class Wallet {
         config: IClientConfig,
         initOffline = false,
     ): Promise<IClientResponse> {
-        this.keyMgmt = new mgmtClient();
-        const initIResult = this.keyMgmt.fromMasterKey(masterKey, config.passphrase);
-        if (!initOffline) {
-            const initNetworkIResult = await this.initNetwork(config);
-            if (initNetworkIResult.status === 'error') {
-                return initNetworkIResult; // Return network error
+        const validConfig = validateConfig(config)
+        const validMasterKey = validateMasterKey(masterKey)
+        if (!validConfig.error && !validMasterKey.error) {
+            this.keyMgmt = new mgmtClient();
+            const initIResult = this.keyMgmt.fromMasterKey(masterKey, config.passphrase);
+            if (!initOffline) {
+                const initNetworkIResult = await this.initNetwork(config);
+                if (initNetworkIResult.status === 'error') {
+                    return initNetworkIResult; // Return network error
+                }
             }
-        }
-
-        if (initIResult.isErr()) {
-            return {
-                status: 'error',
-                reason: initIResult.error, // Return initialization error
-            } as IClientResponse;
+            if (initIResult.isErr()) {
+                return {
+                    status: 'error',
+                    reason: initIResult.error, // Return initialization error
+                } as IClientResponse;
+            } else {
+                return {
+                    status: 'success',
+                    reason: ISuccessInternal.ClientInitialized,
+                } as IClientResponse;
+            }
         } else {
             return {
-                status: 'success',
-                reason: ISuccessInternal.ClientInitialized,
+                status: 'error',
+                reason: validConfig.error ? validConfig.error.message : '' + ' , ' + validMasterKey.error ? validMasterKey.error?.message : '', // Return validation error
             } as IClientResponse;
         }
     }
@@ -153,26 +170,35 @@ export class Wallet {
         config: IClientConfig,
         initOffline = false,
     ): Promise<IClientResponse> {
-        this.keyMgmt = new mgmtClient();
-        const initIResult = this.keyMgmt.fromSeed(seedPhrase, config.passphrase);
-        if (!initOffline) {
-            const initNetworkIResult = await this.initNetwork(config);
-            if (initNetworkIResult.status === 'error') {
-                return initNetworkIResult; // Return network error
+        const validConfig = validateConfig(config)
+        const validSeedphrase = validateSeedphrase(seedPhrase)
+        if (!validConfig.error && !validSeedphrase.error) {
+            this.keyMgmt = new mgmtClient();
+            const initIResult = this.keyMgmt.fromSeed(seedPhrase, config.passphrase);
+            if (!initOffline) {
+                const initNetworkIResult = await this.initNetwork(config);
+                if (initNetworkIResult.status === 'error') {
+                    return initNetworkIResult; // Return network error
+                }
             }
-        }
-        if (initIResult.isErr()) {
-            return {
-                status: 'error',
-                reason: initIResult.error, // Return initialization error
-            } as IClientResponse;
+            if (initIResult.isErr()) {
+                return {
+                    status: 'error',
+                    reason: initIResult.error, // Return initialization error
+                } as IClientResponse;
+            } else {
+                return {
+                    status: 'success',
+                    reason: ISuccessInternal.ClientInitialized,
+                    content: {
+                        fromSeedResponse: initIResult.value,
+                    },
+                } as IClientResponse;
+            }
         } else {
             return {
-                status: 'success',
-                reason: ISuccessInternal.ClientInitialized,
-                content: {
-                    fromSeedResponse: initIResult.value,
-                },
+                status: 'error',
+                reason: validConfig.error ? validConfig.error.message : '' + ' , ' + validSeedphrase.error ? validSeedphrase.error?.message : '', // Return validation error
             } as IClientResponse;
         }
     }

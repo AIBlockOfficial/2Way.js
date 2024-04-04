@@ -4,7 +4,8 @@ import { bytesToBase64 } from 'byte-base64';
 import * as keyMgmt from '../../mgmt/key.mgmt';
 import { TEMP_ADDRESS_VERSION, ADDRESS_VERSION, ADDRESS_VERSION_OLD } from '../../mgmt';
 import { getHexStringBytes } from '../../utils';
-import { SEED } from '../constants';
+import { SEED, SEED2 } from '../constants';
+import { Wallet } from '../../services/wallet.service';
 
 // Public keys for address generation
 const PUBLIC_KEYS = [
@@ -155,8 +156,51 @@ test('generates a valid payment address with the old address structure', () => {
     expect(actual).toEqual(expected);
 });
 
+test('sign message with given keypairs', async () => {
+
+    const walletInstance = new Wallet();
+
+    const MSG = 'hello, world';
+
+    await walletInstance.initNew({ passphrase: '' }, true).then((res) => {
+        expect(res.status).toBe('success');
+    });
+
+    const kp = walletInstance.getNewKeypair([]).content?.newKeypairResponse;
+    const kpAddr = kp?.address;
+
+    expect(kp).toBeDefined();
+    expect(kpAddr).toBeDefined();
+
+    const kp1 = walletInstance.getNewKeypair([kpAddr!]).content?.newKeypairResponse;
+
+    expect(kp1).toBeDefined();
+
+    const keypairs = [kp!, kp1!];
+
+    expect(keypairs).toBeDefined();
+
+    const signatures = walletInstance.signMessage(keypairs, MSG).content?.signMessageResponse;
+
+    expect(signatures).toBeDefined();
+
+    const result = walletInstance.verifyMessage(MSG, signatures!, keypairs);
+
+    expect(result.status).toBe('success');
+
+    const kp2 = walletInstance.getNewKeypair([kpAddr!, kp1!.address]).content?.newKeypairResponse;
+
+    expect(kp2).toBeDefined();
+
+    const keypairs1 = [kp!, kp2!];
+
+    const result1 = walletInstance.verifyMessage(MSG, signatures!, keypairs1);
+    expect(result1.status).toBe('error');
+});
+
 test('can create a valid signature', () => {
     const mKey = keyMgmt.generateMasterKey(SEED);
+
     if (mKey.isOk()) {
         const genKeypair = keyMgmt.getNextDerivedKeypair(mKey.value, 0);
 
@@ -164,6 +208,13 @@ test('can create a valid signature', () => {
             const msg = Uint8Array.from([0, 1, 2]);
             const sig = keyMgmt.createSignature(genKeypair.value.secretKey, msg);
             expect(nacl.sign.detached.verify(msg, sig, genKeypair.value.publicKey)).toEqual(true);
+
+            const mKey2 = keyMgmt.generateMasterKey(SEED2)
+            if (mKey2.isOk()) {
+                const genKeypair2 = keyMgmt.getNextDerivedKeypair(mKey2.value, 0);
+                if (genKeypair2.isOk())
+                    expect(nacl.sign.detached.verify(msg, sig, genKeypair2.value.publicKey)).toEqual(false);
+            }
         }
     }
 });
