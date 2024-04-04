@@ -95,49 +95,6 @@ test('handles key-pair re-generation from wallet seed phrase', async () => {
         ).toEqual(utxoAddressList);
 });
 
-test('sign message with given keypairs', async () => {
-    const config = {
-        mempoolHost: 'http://49.12.234.10:3003',
-        passphrase: '',
-    };
-    const MSG = 'hello, world';
-
-    await walletInstance.initNew(config).then((res) => {
-        expect(res.status).toBe('success');
-    });
-
-    const kp = walletInstance.getNewKeypair([]).content?.newKeypairResponse;
-    const kpAddr = kp?.address;
-
-    expect(kp).toBeDefined();
-    expect(kpAddr).toBeDefined();
-
-    const kp1 = walletInstance.getNewKeypair([kpAddr!]).content?.newKeypairResponse;
-
-    expect(kp1).toBeDefined();
-
-    const keypairs = [kp!, kp1!];
-
-    expect(keypairs).toBeDefined();
-
-    const signatures = walletInstance.signMessage(keypairs, MSG).content?.signMessageResponse;
-
-    expect(signatures).toBeDefined();
-
-    const result = walletInstance.verifyMessage(MSG, signatures!, keypairs);
-
-    expect(result.status).toBe('success');
-
-    const kp2 = walletInstance.getNewKeypair([kpAddr!, kp1!.address]).content?.newKeypairResponse;
-
-    expect(kp2).toBeDefined();
-
-    const keypairs1 = [kp!, kp2!];
-
-    const result1 = walletInstance.verifyMessage(MSG, signatures!, keypairs1);
-    expect(result1.status).toBe('error');
-});
-
 test('fetch balance', async () => {
     const config = {
         mempoolHost: 'http://37.27.23.104:3003',

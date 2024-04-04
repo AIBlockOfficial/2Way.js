@@ -22,6 +22,7 @@ export const CONFIG = {
 }
 
 export const SEED = 'army van defense carry jealous true garbage claim echo media make crunch';
+export const SEED2 = 'exchange shoe gesture useful chapter tired used veteran echo require offer grow';
 
 export const MK = {
     nonce: "9868f40d-7b97-47c9-ad32-",
@@ -103,5 +104,3 @@ export const FETCH_BALANCE_RESPONSE_TEST: IFetchBalanceResponse = {
         ],
     },
 };
-
-test.skip('test constants', () => { });
