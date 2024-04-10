@@ -171,10 +171,8 @@ test('create transaction for the SEND portion of a item-based payment', () => {
             expect(script_signatures).toStrictEqual([
                 {
                     Pay2PkH: {
-                        signable_data:
-                            '927b3411743452e5e0d73e9e40a4fa3c842b3d00dabde7f9af7e44661ce02c88',
-                        signature:
-                            '660e4698d817d409feb209699b15935048c8b3c4ac86a23f25b05aa32fb8b87e7cd029b83220d31a0b2717bd63b47a320a7728355d7fae43a665d6e27743e20d',
+                        signable_data: "fe9bdf42857f0fdfba26b120a42e04a0f331c711870656bea9d088bfcd1e8328",
+                        signature: "001cd9b845ee561bacbb64dcc41126be808868dcb50fc2cb8fee0d8e24fca81c71eb3a9f8f909b9331ffaade12637732778561cd5ac5c1241fb61fad45e6bf0c",
                         public_key:
                             '5e6d463ec66d7999769fa4de56f690dfb62e685b97032f5926b0cb6c93ba83c6',
                         address_version: null,
@@ -182,10 +180,8 @@ test('create transaction for the SEND portion of a item-based payment', () => {
                 },
                 {
                     Pay2PkH: {
-                        signable_data:
-                            '754dc248d1c847e8a10c6f8ded6ccad96381551ebb162583aea2a86b9bb78dfa',
-                        signature:
-                            'fd107c9446cdcbd8fbb0d6b88c73067c9bd15de03fff677b0129acf1bd2d14a5ab8a63c7eb6fe8c5acc4b44b033744760847194a15b006368d178c85243d0605',
+                        signable_data: "00af035f217573c3a2d477a07cfaa1d33b80215ed7e5bbead0f35be7c3b22a8b",
+                        signature: "2c7a17525d9919010872adcbf6b3f719c647866846dfb62cb62cca1998ab5bf032c641178e4527704a8abe0d100378873a1117cbcbea7f7ca8ae58fb4788050f",
                         public_key:
                             '58272ba93c1e79df280d4c417de47dbf6a7e330ba52793d7baa8e00ae5c34e59',
                         address_version: null,
@@ -193,10 +189,8 @@ test('create transaction for the SEND portion of a item-based payment', () => {
                 },
                 {
                     Pay2PkH: {
-                        signable_data:
-                            '5585c6f74d5c55f1ab457c31671822ba28c78c397cce1e11680b9f3852f96edb',
-                        signature:
-                            'e1a436bbfcb3e411be1ce6088cdb4c39d7e79f8fe427943e74307e43864fd0f6ef26123f1439b92c075edd031d17feb4dd265c6fcc2e5ed571df48a03c396100',
+                        signable_data: "95887e26db3c462deb59882c2b2e683630966bfd6737805b382fdf8ff00017a0",
+                        signature: "14933b1035586305cb610dda5d26c256d80288575b25cefee2fb97ecd3aa0d9c288797fe9c31bf1bd1859411b69c2adc9aa99d4feee103496cbe69b1132d1f01",
                         public_key:
                             'efa9dcba0f3282b3ed4a6aa1ccdb169d6685a30d7b2af7a2171a5682f3112359',
                         address_version: null,
@@ -328,10 +322,8 @@ test('create transaction for the RECEIVE portion of a item-based payment', () =>
             expect(script_signatures).toStrictEqual([
                 {
                     Pay2PkH: {
-                        signable_data:
-                            '20da10859579fda4748bf3f0e21a2fa9c7ad8bbc4472002819da79f613c136f0',
-                        signature:
-                            '055973416f4fd0ace53ef392a0c00a83dfc848d52a8425d59fd4eb9e06b0f4a50a637ed452ddacff1a1281a45f83a1ab7faa3142ce5d0341c85a14f634306a06',
+                        signable_data: "fe9bdf42857f0fdfba26b120a42e04a0f331c711870656bea9d088bfcd1e8328",
+                        signature: "001cd9b845ee561bacbb64dcc41126be808868dcb50fc2cb8fee0d8e24fca81c71eb3a9f8f909b9331ffaade12637732778561cd5ac5c1241fb61fad45e6bf0c",
                         public_key:
                             '5e6d463ec66d7999769fa4de56f690dfb62e685b97032f5926b0cb6c93ba83c6',
                         address_version: null,
@@ -378,7 +370,7 @@ test('create TxIns address used as `from` value in DdeValues', () => {
     if (txInputs.isOk()) {
         const ourFromAddress = constructTxInsAddress(txInputs.value.inputs).unwrapOr('');
         expect(ourFromAddress).toStrictEqual(
-            'c8b62d379f07602956207ea473ce20d9752d24ad6e6cd43cb042d024d7c6a468',
+            'dcfa9f0ef515cbf26358d25f1ecfcb35d9eb1b66ea9976e5d0e48fbc53ebfdbf',
         );
     }
 });

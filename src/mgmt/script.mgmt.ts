@@ -7,9 +7,13 @@ import {
     IAssetItem,
     IAssetToken,
     ICreateTxIn,
+    ICreateTxPayload,
+    IFetchBalanceResponse,
     IErrorInternal,
+    IKeypair,
     IOutPoint,
     IResult,
+    ITxOut,
     Script,
     StackEntry,
 } from '../interfaces';
@@ -144,6 +148,74 @@ export function constructTxInSignableAssetHash(asset: IAssetToken | IAssetItem):
     } else {
         return sha3_256(getStringBytes(`Item:${asset.Item.amount}`));
     }
+}
+
+/** Construct a signable hash for a transaction using both the inputs and outputs of the transaction
+ * 
+ * @param txIn - Transaction input
+ * @param txOuts - Transaction outputs
+ * @returns {string} - Signable hash
+ */
+export function constructTxInOutSignableHash(txIn: IOutPoint | null, txOuts: ITxOut[]): string {
+    const signableTxIn = txIn?.t_hash || "";
+    const signableTxOuts = txOuts
+        .map((txOut) => {
+            return JSON.stringify(txOut.script_public_key);
+        })
+        .join('');
+
+    return sha3_256(`${signableTxOuts}${signableTxIn}`);
+}
+
+/**
+ * Updates the signatures of the transaction given the available outputs
+ * 
+ * @param transaction - Transaction to update
+ * @param fetchBalanceResponse - Response from fetch balance
+ * @param allKeypairs - All keypairs
+ * @returns 
+ */
+export function updateSignatures(transaction: ICreateTxPayload, fetchBalanceResponse: IFetchBalanceResponse, allKeypairs: Map<string, IKeypair>) {
+    // Update the signatures
+    transaction.createTx.inputs.map((input) => {
+
+        if (input.script_signature && input.previous_out) {
+            const address = getAddressFromFetchBalanceResponse(fetchBalanceResponse, input.previous_out.t_hash);
+            const keyPair = allKeypairs.get(address);
+            if (!keyPair) return err(IErrorInternal.UnableToGetKeypair);
+
+            const signableData = constructTxInOutSignableHash(
+                input.previous_out,
+                transaction.createTx.outputs,
+            );
+
+            if (signableData === null) return err(IErrorInternal.UnableToConstructSignature);
+            const signature = constructSignature(getStringBytes(signableData), keyPair.secretKey);
+            if (signature.isErr()) return err(signature.error);
+
+            input.script_signature.Pay2PkH.signature = signature.value;
+        }
+
+        return input;
+    });
+
+    return ok(transaction);
+}
+
+/**
+ * Gets the address of the outpoint that matches the transaction hash of the input
+ * 
+ * @param fetchBalanceResponse - Response from fetch balance
+ * @param t_hash - Transaction hash
+ * @returns 
+ */
+export function getAddressFromFetchBalanceResponse(fetchBalanceResponse: IFetchBalanceResponse, t_hash: string) {
+    return Object.keys(fetchBalanceResponse.address_list).filter((address) => {
+        const outPoints = fetchBalanceResponse.address_list[address];
+
+        // Searches through the outpoints and returns true if the t_hash of the outpoint matches the t_hash provided
+        return outPoints.some((outPoint) => outPoint.out_point.t_hash === t_hash);
+    })[0];
 }
 
 /**
