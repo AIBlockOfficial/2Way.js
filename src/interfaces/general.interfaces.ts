@@ -32,7 +32,7 @@ export type ICustomKeyPair<K extends string | number | symbol, T> = {
 // Master key
 export type IMasterKey = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    secret: any;
+    secret: any; // bitcore-nemonic HDPrivateKey
     seed: string;
 };
 

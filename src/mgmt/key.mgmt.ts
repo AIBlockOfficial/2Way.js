@@ -116,7 +116,7 @@ export function generateMasterKey(seed?: string, passphrase?: string): IResult<I
  */
 export function generateKeypair(version = ADDRESS_VERSION, seed?: Uint8Array): IResult<IKeypair> {
     try {
-        if (seed && seed.length != 32) {
+        if (seed && seed.length !== 32) {
             seed = seed.slice(0, 32);
         }
         const keypairRaw = seed ? nacl.sign.keyPair.fromSeed(seed) : nacl.sign.keyPair();
