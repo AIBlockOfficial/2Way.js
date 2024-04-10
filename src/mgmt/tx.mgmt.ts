@@ -30,7 +30,7 @@ import {
 } from '../utils';
 import { NETWORK_VERSION } from './constants';
 import { getAddressVersion } from './key.mgmt';
-import { constructSignature, constructTxInSignableData } from './script.mgmt';
+import { constructSignature, constructTxInOutSignableHash, updateSignatures } from './script.mgmt';
 
 /* -------------------------------------------------------------------------- */
 /*                          Transaction Construction                          */
@@ -62,19 +62,19 @@ export function getInputsForTx(
     const enoughRunningTotal = isOfTypeAssetToken
         ? paymentAsset.Token <= fetchBalanceResponse.total.tokens
         : paymentAsset.Item.amount <=
-          fetchBalanceResponse.total.items[paymentAsset.Item.genesis_hash];
+        fetchBalanceResponse.total.items[paymentAsset.Item.genesis_hash];
 
     if (enoughRunningTotal) {
         // Initialize the total amount gathered; apply DRS transaction hash where required
         let totalAmountGathered: IAssetToken | IAssetItem = isOfTypeAssetToken
             ? initIAssetToken()
             : initIAssetItem({
-                  Item: {
-                      amount: 0,
-                      genesis_hash: paymentAsset.Item.genesis_hash || '',
-                      metadata: paymentAsset.Item.metadata || null,
-                  },
-              });
+                Item: {
+                    amount: 0,
+                    genesis_hash: paymentAsset.Item.genesis_hash || '',
+                    metadata: paymentAsset.Item.metadata || null,
+                },
+            });
 
         // A list of all addresses used to gather inputs
         const usedAddresses: string[] = [];
@@ -96,8 +96,8 @@ export function getInputsForTx(
                     // Ensure that the assets are compatible
                     const assetsCompatible = assetsAreCompatible(paymentAsset, value);
                     if (lhsAssetIsLess.value && assetsCompatible) {
-                        // Construct signature data
-                        const signableData = constructTxInSignableData(out_point);
+                        // Construct signature data (placeholder until outputs are determined)
+                        const signableData = constructTxInOutSignableHash(out_point, []);
                         if (signableData === null)
                             return err(IErrorInternal.UnableToConstructSignature);
 
@@ -264,6 +264,9 @@ export function createPaymentTx(
     const txIns = getInputsForTx(paymentAsset, fetchBalanceResponse, allKeypairs);
     if (txIns.isErr()) return err(txIns.error);
 
-    // Create the transaction
-    return createTx(paymentAddress, paymentAsset, excessAddress, null, txIns.value);
+    const transaction = createTx(paymentAddress, paymentAsset, excessAddress, null, txIns.value);
+    if (transaction.isErr()) return err(transaction.error);
+
+    // Update signatures
+    return updateSignatures(transaction.value, fetchBalanceResponse, allKeypairs);
 }
