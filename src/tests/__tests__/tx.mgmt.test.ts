@@ -91,8 +91,8 @@ test('create transaction for a token amount', () => {
             expect(script_signatures).toStrictEqual([
                 {
                     Pay2PkH: {
-                        signable_data: "fe9bdf42857f0fdfba26b120a42e04a0f331c711870656bea9d088bfcd1e8328",
-                        signature: "d4b3ca1fda6a346bda064e170e53d8b8dab542a3a68a28b88b7a735ba62856b8e948070219cdb7d4990a3f1b15a8f481b88f538bd6bedb2449ba3b58a7343002",
+                        signable_data: "86e3c1d19379f4b4dda5c2b8e5142339d99e34a1a17ea8146232a4ec5252f734",
+                        signature: "3533068710c929159ef2e6a30fd9349780aadfa877ce45c120fc2c656395a96334c2e6bf6bb1a0f57ec2ec8857b68225079275aa1185604647cf47f2ac3f110c",
                         public_key:
                             '5e6d463ec66d7999769fa4de56f690dfb62e685b97032f5926b0cb6c93ba83c6',
                         address_version: null,
@@ -100,8 +100,8 @@ test('create transaction for a token amount', () => {
                 },
                 {
                     Pay2PkH: {
-                        signable_data: "00af035f217573c3a2d477a07cfaa1d33b80215ed7e5bbead0f35be7c3b22a8b",
-                        signature: "434d4bd39d048c72307d71cd5025ff8e0ec58b488d84e9131dcff5d592d38c9122c50bef0799edd5b55d3d049d83df8877949081a8cf92587a6f5f4d83ed7f08",
+                        signable_data: "8a7ef108ca61e52a3c264b6fcb60b45403a4e43ecde09e556d7f061fcf51b763",
+                        signature: "a24a109f2e8de9d1caaf31bea3adb112e495a62850f6adc8705ee91f5c6fe8c619ba1f8bcffca30f2bf219d848990180b5b1383fc98be5daad2710dacea05f04",
                         public_key:
                             '58272ba93c1e79df280d4c417de47dbf6a7e330ba52793d7baa8e00ae5c34e59',
                         address_version: null,
@@ -109,8 +109,8 @@ test('create transaction for a token amount', () => {
                 },
                 {
                     Pay2PkH: {
-                        signable_data: "95887e26db3c462deb59882c2b2e683630966bfd6737805b382fdf8ff00017a0",
-                        signature: "a533ca3438935bc4ce39ccff1bcc14ba6044b2595003a7e758927a21d7cd4876ca6820e6c6cce65186974e459aa2e7ae2251ad80e4b587926cd74a2cb855cf0d",
+                        signable_data: "f7bb539b27ad6651c3895844126af85e1cc9fddfe425b08750e975f823fc509a",
+                        signature: "1cc4757436b6a309805aebe7ec718a91427aaceab3de23ebecdbdf197be5885de89ee788e1f96c0f5cfe722c2103e14e4a33a32b59173ffc1c24491d6174e50f",
                         public_key:
                             'efa9dcba0f3282b3ed4a6aa1ccdb169d6685a30d7b2af7a2171a5682f3112359',
                         address_version: null,
