@@ -160,7 +160,7 @@ export function constructTxInOutSignableHash(txIn: IOutPoint | null, txOuts: ITx
     const signableTxIn = txIn?.t_hash || '';
     const signableTxOuts = txOuts
         .map((txOut) => {
-            return JSON.stringify(txOut.script_public_key);
+            return txOut.script_public_key || '';
         })
         .join('');
 
@@ -197,8 +197,10 @@ export function updateSignatures(
 
             if (signableData === null) return err(IErrorInternal.UnableToConstructSignature);
             const signature = constructSignature(getStringBytes(signableData), keyPair.secretKey);
+
             if (signature.isErr()) return err(signature.error);
 
+            input.script_signature.Pay2PkH.signable_data = signableData;
             input.script_signature.Pay2PkH.signature = signature.value;
         }
 
