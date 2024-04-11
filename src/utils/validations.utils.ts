@@ -9,7 +9,7 @@ export const validateConfig = (config: IClientConfig) => {
     const configSchema = Joi.object({
         mempoolHost: Joi.string().uri(uri_scheme),
         storageHost: Joi.string().uri(uri_scheme),
-        intercomHost: Joi.string().uri(uri_scheme),
+        valenceHost: Joi.string().uri(uri_scheme),
         passphrase: Joi.string().empty(''),
     });
     return configSchema.validate(config);

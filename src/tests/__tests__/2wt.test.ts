@@ -12,8 +12,8 @@ beforeEach(() => {
 
 test('make 2 way payment', async () => {
     const config = {
-        mempoolHost: 'http://37.27.23.104:3003',
-        storageHost: 'http://37.27.23.104:3001',
+        mempoolHost: 'https://mempool.aiblock.dev',
+        storageHost: 'https://storage.aiblock.dev',
         valenceHost: 'http://0.0.0.0:3030',
         passphrase: '',
     };
@@ -22,6 +22,7 @@ test('make 2 way payment', async () => {
     const seed = 'potato home pond music way wood fatigue lonely cabin write put emerge'
     const asset = 'g97632b69eab97db603119dd5454c7fc'
     await walletInstance.fromSeed(seed, config).then((res) => {
+        console.log(res)
         expect(res.status).toBe('success');
     });
     const kp = walletInstance.getNewKeypair([]).content?.newKeypairResponse;
@@ -66,8 +67,8 @@ test('make 2 way payment', async () => {
 
 test('fetch 2 way payment', async () => {
     const config = {
-        mempoolHost: 'http://37.27.23.104:3003',
-        storageHost: 'http://37.27.23.104:3001',
+        mempoolHost: 'https://mempool.aiblock.dev',
+        storageHost: 'https://storage.aiblock.dev',
         valenceHost: 'http://0.0.0.0:3030',
         passphrase: '',
     };

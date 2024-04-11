@@ -23,6 +23,7 @@
     "test-key": "jest --no-cache --config jest.config.js ./tests/__tests__/key.mgmt.test.ts",
     "test-tx": "jest --no-cache --config jest.config.js ./tests/__tests__/tx.mgmt.test.ts",
     "test-utils": "jest --no-cache --config jest.config.js ./tests/__tests__/utils.test.ts",
+    "test-2w": "jest --no-cache --config jest.config.js ./tests/__tests__/2wt.test.ts",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",
     "preversion": "npm run lint",
