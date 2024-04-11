@@ -15,19 +15,20 @@ export type IAddressListTest = {
 };
 
 export const CONFIG = {
-    mempoolHost: 'http://37.27.23.104:3003',
-    storageHost: 'http://37.27.23.104:3001',
-    valenceHost: 'http://0.0.0.0:3030',
+    mempoolHost: 'https://mempool.aiblock.ch',
+    storageHost: 'https://storage.aiblock.ch',
+    intercomHost: 'http://0.0.0.0:3030',
     passphrase: '',
-}
+};
 
 export const SEED = 'army van defense carry jealous true garbage claim echo media make crunch';
-export const SEED2 = 'exchange shoe gesture useful chapter tired used veteran echo require offer grow';
+export const SEED2 =
+    'exchange shoe gesture useful chapter tired used veteran echo require offer grow';
 
 export const MK = {
-    nonce: "9868f40d-7b97-47c9-ad32-",
-    save: "X/0ry5n0jff2pzj8Ew3j+Doy+vmTMA8KBFbc5AYIJWfaN26KeEIXgMSR7zGg31whkiNT5ROeyBkcWfEvecXdea2iCmc6+diW5Upp8rzhVaLlaMUiO6PsatgmbQfg5L1g9Z/gq5XaCdMeIyJRG16O6SL/x6SHpri2FfY3J4ZhDg=="
-}
+    nonce: '9868f40d-7b97-47c9-ad32-',
+    save: 'X/0ry5n0jff2pzj8Ew3j+Doy+vmTMA8KBFbc5AYIJWfaN26KeEIXgMSR7zGg31whkiNT5ROeyBkcWfEvecXdea2iCmc6+diW5Upp8rzhVaLlaMUiO6PsatgmbQfg5L1g9Z/gq5XaCdMeIyJRG16O6SL/x6SHpri2FfY3J4ZhDg==',
+};
 
 export const ADDRESS_LIST_TEST: IAddressListTest = {
     cf0067d6c42463b2c1e4236e9669df546c74b16c0e2ef37114549b2944e05b7c: {

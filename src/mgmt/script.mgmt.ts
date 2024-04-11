@@ -151,13 +151,13 @@ export function constructTxInSignableAssetHash(asset: IAssetToken | IAssetItem):
 }
 
 /** Construct a signable hash for a transaction using both the inputs and outputs of the transaction
- * 
+ *
  * @param txIn - Transaction input
  * @param txOuts - Transaction outputs
  * @returns {string} - Signable hash
  */
 export function constructTxInOutSignableHash(txIn: IOutPoint | null, txOuts: ITxOut[]): string {
-    const signableTxIn = txIn?.t_hash || "";
+    const signableTxIn = txIn?.t_hash || '';
     const signableTxOuts = txOuts
         .map((txOut) => {
             return txOut.script_public_key || '';
@@ -169,18 +169,24 @@ export function constructTxInOutSignableHash(txIn: IOutPoint | null, txOuts: ITx
 
 /**
  * Updates the signatures of the transaction given the available outputs
- * 
+ *
  * @param transaction - Transaction to update
  * @param fetchBalanceResponse - Response from fetch balance
  * @param allKeypairs - All keypairs
- * @returns 
+ * @returns
  */
-export function updateSignatures(transaction: ICreateTxPayload, fetchBalanceResponse: IFetchBalanceResponse, allKeypairs: Map<string, IKeypair>) {
+export function updateSignatures(
+    transaction: ICreateTxPayload,
+    fetchBalanceResponse: IFetchBalanceResponse,
+    allKeypairs: Map<string, IKeypair>,
+) {
     // Update the signatures
     transaction.createTx.inputs.map((input) => {
-
         if (input.script_signature && input.previous_out) {
-            const address = getAddressFromFetchBalanceResponse(fetchBalanceResponse, input.previous_out.t_hash);
+            const address = getAddressFromFetchBalanceResponse(
+                fetchBalanceResponse,
+                input.previous_out.t_hash,
+            );
             const keyPair = allKeypairs.get(address);
             if (!keyPair) return err(IErrorInternal.UnableToGetKeypair);
 
@@ -206,12 +212,15 @@ export function updateSignatures(transaction: ICreateTxPayload, fetchBalanceResp
 
 /**
  * Gets the address of the outpoint that matches the transaction hash of the input
- * 
+ *
  * @param fetchBalanceResponse - Response from fetch balance
  * @param t_hash - Transaction hash
- * @returns 
+ * @returns
  */
-export function getAddressFromFetchBalanceResponse(fetchBalanceResponse: IFetchBalanceResponse, t_hash: string) {
+export function getAddressFromFetchBalanceResponse(
+    fetchBalanceResponse: IFetchBalanceResponse,
+    t_hash: string,
+) {
     return Object.keys(fetchBalanceResponse.address_list).filter((address) => {
         const outPoints = fetchBalanceResponse.address_list[address];
 

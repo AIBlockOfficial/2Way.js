@@ -1,4 +1,4 @@
-import { SEED, MK } from '../constants';
+import { SEED, MK, CONFIG } from '../constants';
 import { Wallet } from '../../services/wallet.service';
 
 let walletInstance = new Wallet();
@@ -11,9 +11,9 @@ beforeEach(() => {
 test('init wallet validation', async () => {
     const config = {
         mempoolHost: '',
-        storageHost: 'http://37.27.23.104:3001',
-        intercomHost: 'http://0.0.0.0:3030',
-        passphrase: '',
+        storageHost: CONFIG.storageHost,
+        intercomHost: CONFIG.intercomHost,
+        passphrase: CONFIG.passphrase,
     };
 
     await walletInstance.initNew(config).then((res) => {
@@ -31,8 +31,8 @@ test('init wallet validation', async () => {
 
 test('init wallet without optional config fields', async () => {
     const config = {
-        mempoolHost: 'http://49.12.234.10:3003',
-        passphrase: '',
+        mempoolHost: CONFIG.mempoolHost,
+        passphrase: CONFIG.passphrase,
     };
 
     await walletInstance.initNew(config).then((res) => {
@@ -49,17 +49,11 @@ test('init wallet without optional config fields', async () => {
 });
 
 test('init wallet locally and then connect', async () => {
-    await walletInstance.initNew({ passphrase: '' }, true).then((res) => {
+    await walletInstance.initNew({ passphrase: CONFIG.passphrase }, true).then((res) => {
         expect(res.status).toBe('success');
     });
 
-    const config = {
-        mempoolHost: 'http://49.12.234.10:3003',
-        storageHost: 'http://49.12.234.10:3001',
-        passphrase: '',
-    };
-
-    await walletInstance.initNetwork(config).then((res) => {
+    await walletInstance.initNetwork(CONFIG).then((res) => {
         expect(res.status).toBe('success');
     });
 });
@@ -96,13 +90,7 @@ test('handles key-pair re-generation from wallet seed phrase', async () => {
 });
 
 test('fetch balance', async () => {
-    const config = {
-        mempoolHost: 'http://37.27.23.104:3003',
-        storageHost: 'http://37.27.23.104:3001',
-        passphrase: '',
-    };
-
-    await walletInstance.initNew(config).then((res) => {
+    await walletInstance.initNew(CONFIG).then((res) => {
         expect(res.status).toBe('success');
     });
 
@@ -118,13 +106,7 @@ test('fetch balance', async () => {
 });
 
 test('fetch transaction', async () => {
-    const config = {
-        mempoolHost: 'http://37.27.23.104:3003',
-        storageHost: 'http://37.27.23.104:3001',
-        passphrase: '',
-    };
-
-    await walletInstance.initNew(config).then((res) => {
+    await walletInstance.initNew(CONFIG).then((res) => {
         expect(res.status).toBe('success');
     });
 
