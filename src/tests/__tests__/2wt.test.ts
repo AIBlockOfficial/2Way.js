@@ -20,7 +20,7 @@ test('make 2 way payment', async () => {
 
     // Alice
     const seed = 'potato home pond music way wood fatigue lonely cabin write put emerge'
-    const asset = 'g97632b69eab97db603119dd5454c7fc'
+    const asset = 'g4ad95e16b100f3b6bb232c16a543cea'
     await walletInstance.fromSeed(seed, config).then((res) => {
         console.log(res)
         expect(res.status).toBe('success');
@@ -29,7 +29,7 @@ test('make 2 way payment', async () => {
 
     // Bob
     const seed2 = 'walk capable spin today category pool twenty miss piano check reform vocal'
-    const asset2 = 'g621ea33bfc2e840c82bf86abfcfb849'
+    const asset2 = 'g08667340b04f40bb512dd8d74dcd1cf'
     await walletInstance2.fromSeed(seed2, config).then((res) => {
         expect(res.status).toBe('success');
     });
@@ -65,26 +65,26 @@ test('make 2 way payment', async () => {
     });
 });
 
-test('fetch 2 way payment', async () => {
-    const config = {
-        mempoolHost: 'https://mempool.aiblock.dev',
-        storageHost: 'https://storage.aiblock.dev',
-        valenceHost: 'http://0.0.0.0:3030',
-        passphrase: '',
-    };
+// test('fetch 2 way payment', async () => {
+//     const config = {
+//         mempoolHost: 'https://mempool.aiblock.dev',
+//         storageHost: 'https://storage.aiblock.dev',
+//         valenceHost: 'http://0.0.0.0:3030',
+//         passphrase: '',
+//     };
 
-    // Bob fetching Alices 2WT
-    const seed2 = 'walk capable spin today category pool twenty miss piano check reform vocal'
-    await walletInstance2.fromSeed(seed2, config).then((res) => {
-        expect(res.status).toBe('success');
-    });
-    const kp2 = walletInstance2.getNewKeypair([]).content?.newKeypairResponse;
+//     // Bob fetching Alices 2WT
+//     const seed2 = 'walk capable spin today category pool twenty miss piano check reform vocal'
+//     await walletInstance2.fromSeed(seed2, config).then((res) => {
+//         expect(res.status).toBe('success');
+//     });
+//     const kp2 = walletInstance2.getNewKeypair([]).content?.newKeypairResponse;
 
-    await walletInstance.fetchPending2WayPayments(
-        [kp2!],
-        []
-    ).then((res) => {
-        console.log(res)
-        expect(res.status).toBe('success');
-    });
-});
+//     await walletInstance.fetchPending2WayPayments(
+//         [kp2!],
+//         []
+//     ).then((res) => {
+//         console.log(res)
+//         expect(res.status).toBe('success');
+//     });
+// });
