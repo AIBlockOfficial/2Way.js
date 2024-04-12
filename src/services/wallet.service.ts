@@ -1078,6 +1078,9 @@ export class Wallet {
                 ),
             );
 
+            console.log('paymentBody', paymentBody.createTx);
+            console.log('paymentBody', JSON.stringify(paymentBody.createTx));
+
             const { usedAddresses } = paymentBody;
 
             // Generate the needed headers
@@ -1087,6 +1090,7 @@ export class Wallet {
             );
 
             // Send transaction to mempool for processing
+            console.log("Hi");
             return await axios
                 .post<INetworkResponse>(
                     `${this.mempoolHost}${IAPIRoute.CreateTransactions}`,
@@ -1112,6 +1116,10 @@ export class Wallet {
                     if (error instanceof Error) throw new Error(error.message);
                     else throw new Error(`${error}`);
                 });
+            // return {
+            //     status: 'success',
+            //     reason: 'Payment made',
+            // } as IClientResponse;
         } catch (error) {
             return {
                 status: 'error',
