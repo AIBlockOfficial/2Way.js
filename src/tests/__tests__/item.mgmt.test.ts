@@ -132,13 +132,11 @@ test('create transaction for the SEND portion of a item-based payment', () => {
                 {
                     value: { Token: 1050 } /* Amount payed */,
                     locktime: 0,
-                    genesis_hash: null,
                     script_public_key: 'their_receive_address',
                 },
                 {
                     value: { Token: 10 } /* Change/excess */,
                     locktime: 0,
-                    genesis_hash: null,
                     script_public_key: 'excess_address',
                 },
             ]);
@@ -171,8 +169,10 @@ test('create transaction for the SEND portion of a item-based payment', () => {
             expect(script_signatures).toStrictEqual([
                 {
                     Pay2PkH: {
-                        signable_data: "fe9bdf42857f0fdfba26b120a42e04a0f331c711870656bea9d088bfcd1e8328",
-                        signature: "001cd9b845ee561bacbb64dcc41126be808868dcb50fc2cb8fee0d8e24fca81c71eb3a9f8f909b9331ffaade12637732778561cd5ac5c1241fb61fad45e6bf0c",
+                        signable_data:
+                            '2769799af59a8accc12ded7fbe478c84d8f97f7754a15a52907067d7bd9e6141',
+                        signature:
+                            '45b330c86b7c9e6e78d2b5baad354a6def2baabeb473e5a80ce037717664d8af3c474717d356b3b882f9fd2b0d3d25ee5122624aa1edbebf33dcb8a0bad31b08',
                         public_key:
                             '5e6d463ec66d7999769fa4de56f690dfb62e685b97032f5926b0cb6c93ba83c6',
                         address_version: null,
@@ -180,8 +180,10 @@ test('create transaction for the SEND portion of a item-based payment', () => {
                 },
                 {
                     Pay2PkH: {
-                        signable_data: "00af035f217573c3a2d477a07cfaa1d33b80215ed7e5bbead0f35be7c3b22a8b",
-                        signature: "2c7a17525d9919010872adcbf6b3f719c647866846dfb62cb62cca1998ab5bf032c641178e4527704a8abe0d100378873a1117cbcbea7f7ca8ae58fb4788050f",
+                        signable_data:
+                            'c8e18ee7486bdee91e8d5c2d9f97ee3a23a686ac2ba4723f602bdc1fde91cae5',
+                        signature:
+                            '785d42e8063fbe8201cca1b70e4c7c2708d2a50d9456c0f95f86780eb81f1b3d453f5d3e5581fd7d827acc835aec5b7abacfd3c13431b3191ae861a52a45fd0a',
                         public_key:
                             '58272ba93c1e79df280d4c417de47dbf6a7e330ba52793d7baa8e00ae5c34e59',
                         address_version: null,
@@ -189,8 +191,10 @@ test('create transaction for the SEND portion of a item-based payment', () => {
                 },
                 {
                     Pay2PkH: {
-                        signable_data: "95887e26db3c462deb59882c2b2e683630966bfd6737805b382fdf8ff00017a0",
-                        signature: "14933b1035586305cb610dda5d26c256d80288575b25cefee2fb97ecd3aa0d9c288797fe9c31bf1bd1859411b69c2adc9aa99d4feee103496cbe69b1132d1f01",
+                        signable_data:
+                            '8dd573baa284b30ef9e1f874eabe4415eb8fc819285e82d871c24215c6b3c2d9',
+                        signature:
+                            '5578bf247e0359155370b08131ed4a6bc08174af118e2b74ffb893f683859de539a29725a38a5010cd3b4c98df3c9a97d5865d048eb503b291ca87c97a19ce0c',
                         public_key:
                             'efa9dcba0f3282b3ed4a6aa1ccdb169d6685a30d7b2af7a2171a5682f3112359',
                         address_version: null,
@@ -285,7 +289,6 @@ test('create transaction for the RECEIVE portion of a item-based payment', () =>
                         },
                     } /* Amount payed */,
                     locktime: 0,
-                    genesis_hash: null,
                     script_public_key: 'their_receive_address',
                 },
                 {
@@ -297,7 +300,6 @@ test('create transaction for the RECEIVE portion of a item-based payment', () =>
                         },
                     } /* Change/excess */,
                     locktime: 0,
-                    genesis_hash: null,
                     script_public_key: 'excess_address',
                 },
             ]);
@@ -322,8 +324,10 @@ test('create transaction for the RECEIVE portion of a item-based payment', () =>
             expect(script_signatures).toStrictEqual([
                 {
                     Pay2PkH: {
-                        signable_data: "fe9bdf42857f0fdfba26b120a42e04a0f331c711870656bea9d088bfcd1e8328",
-                        signature: "001cd9b845ee561bacbb64dcc41126be808868dcb50fc2cb8fee0d8e24fca81c71eb3a9f8f909b9331ffaade12637732778561cd5ac5c1241fb61fad45e6bf0c",
+                        signable_data:
+                            'c636d18e5db19794dd4510b7d16e53ac7eeded2049b6d3dfbe53f0d7f3cfabde',
+                        signature:
+                            'cad58b35e1f4854621b9b327ce6d4c5dc3b3a4660e0f2a346f1156de5c4bdd1a9b29a437a56c0b13ccca9ae9d20a216515f041bf647f216279d16aac04a96900',
                         public_key:
                             '5e6d463ec66d7999769fa4de56f690dfb62e685b97032f5926b0cb6c93ba83c6',
                         address_version: null,
@@ -370,7 +374,7 @@ test('create TxIns address used as `from` value in DdeValues', () => {
     if (txInputs.isOk()) {
         const ourFromAddress = constructTxInsAddress(txInputs.value.inputs).unwrapOr('');
         expect(ourFromAddress).toStrictEqual(
-            'dcfa9f0ef515cbf26358d25f1ecfcb35d9eb1b66ea9976e5d0e48fbc53ebfdbf',
+            'a709f0602a8a7297953243583f1080ec4e491fe8db640c4f88411ccb6e75c1d5',
         );
     }
 });

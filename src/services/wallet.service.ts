@@ -44,7 +44,7 @@ import {
     formatAssetStructures,
     transformCreateTxResponseFromNetwork,
 } from '../utils';
-import { validateConfig, validateMasterKey, validateSeedphrase } from '../utils/validations.utils'
+import { validateConfig, validateMasterKey, validateSeedphrase } from '../utils/validations.utils';
 import { mgmtClient } from './mgmt.service';
 import { ADDRESS_VERSION } from '../mgmt/constants';
 
@@ -80,7 +80,7 @@ export class Wallet {
      * @memberof Wallet
      */
     public async initNew(config: IClientConfig, initOffline = false): Promise<IClientResponse> {
-        const valid = validateConfig(config)
+        const valid = validateConfig(config);
         if (!valid.error) {
             this.keyMgmt = new mgmtClient();
             const initIResult = this.keyMgmt.initNew(config.passphrase);
@@ -126,8 +126,8 @@ export class Wallet {
         config: IClientConfig,
         initOffline = false,
     ): Promise<IClientResponse> {
-        const validConfig = validateConfig(config)
-        const validMasterKey = validateMasterKey(masterKey)
+        const validConfig = validateConfig(config);
+        const validMasterKey = validateMasterKey(masterKey);
         if (!validConfig.error && !validMasterKey.error) {
             this.keyMgmt = new mgmtClient();
             const initIResult = this.keyMgmt.fromMasterKey(masterKey, config.passphrase);
@@ -151,7 +151,11 @@ export class Wallet {
         } else {
             return {
                 status: 'error',
-                reason: validConfig.error ? validConfig.error.message : '' + ' , ' + validMasterKey.error ? validMasterKey.error?.message : '', // Return validation error
+                reason: validConfig.error
+                    ? validConfig.error.message
+                    : '' + ' , ' + validMasterKey.error
+                    ? validMasterKey.error?.message
+                    : '', // Return validation error
             } as IClientResponse;
         }
     }
@@ -170,8 +174,8 @@ export class Wallet {
         config: IClientConfig,
         initOffline = false,
     ): Promise<IClientResponse> {
-        const validConfig = validateConfig(config)
-        const validSeedphrase = validateSeedphrase(seedPhrase)
+        const validConfig = validateConfig(config);
+        const validSeedphrase = validateSeedphrase(seedPhrase);
         if (!validConfig.error && !validSeedphrase.error) {
             this.keyMgmt = new mgmtClient();
             const initIResult = this.keyMgmt.fromSeed(seedPhrase, config.passphrase);
@@ -198,7 +202,11 @@ export class Wallet {
         } else {
             return {
                 status: 'error',
-                reason: validConfig.error ? validConfig.error.message : '' + ' , ' + validSeedphrase.error ? validSeedphrase.error?.message : '', // Return validation error
+                reason: validConfig.error
+                    ? validConfig.error.message
+                    : '' + ' , ' + validSeedphrase.error
+                    ? validSeedphrase.error?.message
+                    : '', // Return validation error
             } as IClientResponse;
         }
     }
@@ -1090,7 +1098,7 @@ export class Wallet {
             );
 
             // Send transaction to mempool for processing
-            console.log("Hi");
+            console.log('Hi');
             return await axios
                 .post<INetworkResponse>(
                     `${this.mempoolHost}${IAPIRoute.CreateTransactions}`,

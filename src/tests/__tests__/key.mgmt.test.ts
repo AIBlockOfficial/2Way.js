@@ -157,7 +157,6 @@ test('generates a valid payment address with the old address structure', () => {
 });
 
 test('sign message with given keypairs', async () => {
-
     const walletInstance = new Wallet();
 
     const MSG = 'hello, world';
@@ -209,11 +208,13 @@ test('can create a valid signature', () => {
             const sig = keyMgmt.createSignature(genKeypair.value.secretKey, msg);
             expect(nacl.sign.detached.verify(msg, sig, genKeypair.value.publicKey)).toEqual(true);
 
-            const mKey2 = keyMgmt.generateMasterKey(SEED2)
+            const mKey2 = keyMgmt.generateMasterKey(SEED2);
             if (mKey2.isOk()) {
                 const genKeypair2 = keyMgmt.getNextDerivedKeypair(mKey2.value, 0);
                 if (genKeypair2.isOk())
-                    expect(nacl.sign.detached.verify(msg, sig, genKeypair2.value.publicKey)).toEqual(false);
+                    expect(
+                        nacl.sign.detached.verify(msg, sig, genKeypair2.value.publicKey),
+                    ).toEqual(false);
             }
         }
     }
