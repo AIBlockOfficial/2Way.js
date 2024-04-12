@@ -15,9 +15,9 @@ export type IAddressListTest = {
 };
 
 export const CONFIG = {
-    mempoolHost: 'http://37.27.23.104:3003',
-    storageHost: 'http://37.27.23.104:3001',
-    valenceHost: 'http://0.0.0.0:3030',
+    mempoolHost: 'https://mempool.aiblock.ch',
+    storageHost: 'https://storage.aiblock.ch',
+    intercomHost: 'http://0.0.0.0:3030',
     passphrase: '',
 };
 
