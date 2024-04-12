@@ -157,7 +157,7 @@ export function constructTxInSignableAssetHash(asset: IAssetToken | IAssetItem):
  * @returns {string} - Signable hash
  */
 export function constructTxInOutSignableHash(txIn: IOutPoint | null, txOuts: ITxOut[]): string {
-    const signableTxIn = txIn?.t_hash || '';
+    const signableTxIn = JSON.stringify(txIn) || '';
     const signableTxOuts = txOuts
         .map((txOut) => {
             return JSON.stringify(txOut) || '';
