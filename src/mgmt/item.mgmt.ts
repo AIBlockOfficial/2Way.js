@@ -84,6 +84,7 @@ export function createIbTxHalf(
     receiverExpectation: IDruidExpectation,
     excessAddress: string,
     allKeypairs: Map<string, IKeypair>,
+    locktime: number,
 ): IResult<ICreateTxPayload> {
     // Gather `TxIn` values
     const txIns = getInputsForTx(receiverExpectation.asset, fetchBalanceResponse, allKeypairs);
@@ -105,5 +106,6 @@ export function createIbTxHalf(
         excessAddress,
         druidInfo,
         txIns.value,
+        locktime,
     );
 }

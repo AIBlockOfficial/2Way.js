@@ -264,7 +264,14 @@ export function createPaymentTx(
     const txIns = getInputsForTx(paymentAsset, fetchBalanceResponse, allKeypairs);
     if (txIns.isErr()) return err(txIns.error);
 
-    const transaction = createTx(paymentAddress, paymentAsset, excessAddress, null, txIns.value, locktime);
+    const transaction = createTx(
+        paymentAddress,
+        paymentAsset,
+        excessAddress,
+        null,
+        txIns.value,
+        locktime,
+    );
     if (transaction.isErr()) return err(transaction.error);
 
     // Update signatures

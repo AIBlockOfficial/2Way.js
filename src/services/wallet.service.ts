@@ -549,6 +549,7 @@ export class Wallet {
         receivingAsset: IAssetItem | IAssetToken,
         allKeypairs: IKeypairEncrypted[],
         receiveAddress: IKeypairEncrypted,
+        locktime = 0,
     ): Promise<IClientResponse> {
         try {
             if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
@@ -590,6 +591,7 @@ export class Wallet {
                     receiverExpectation,
                     senderKeypair.address,
                     keyPairMap,
+                    locktime,
                 ),
             );
 
@@ -1059,7 +1061,7 @@ export class Wallet {
         paymentAsset: IAssetToken | IAssetItem,
         allKeypairs: IKeypairEncrypted[],
         excessKeypair: IKeypairEncrypted,
-        locktime: number = 0,
+        locktime = 0,
     ) {
         try {
             if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
@@ -1084,7 +1086,7 @@ export class Wallet {
                     excessKeypair.address,
                     balance.content.fetchBalanceResponse,
                     keyPairMap,
-                    locktime
+                    locktime,
                 ),
             );
 
@@ -1154,6 +1156,7 @@ export class Wallet {
         pendingResponse: IResponseIntercom<IPendingIbTxDetails>,
         status: 'accepted' | 'rejected',
         allKeypairs: IKeypairEncrypted[],
+        locktime = 0,
     ): Promise<IClientResponse> {
         try {
             if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
@@ -1200,6 +1203,7 @@ export class Wallet {
                         txInfo.senderExpectation, // What the other party can expect from us
                         receiverKeypair.address,
                         keyPairMap,
+                        locktime,
                     ),
                 );
 

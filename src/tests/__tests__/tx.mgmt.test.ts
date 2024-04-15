@@ -7,6 +7,7 @@ import { initIAssetToken } from '../../utils';
 
 test('create transaction for a token amount', () => {
     const keyPairMap = new Map<string, IKeypair>();
+    const LOCKTIME = 100;
     for (const addr of Object.keys(ADDRESS_LIST_TEST)) {
         keyPairMap.set(addr, {
             address: addr,
@@ -25,6 +26,7 @@ test('create transaction for a token amount', () => {
         'excess_address',
         FETCH_BALANCE_RESPONSE_TEST,
         keyPairMap,
+        LOCKTIME,
     );
 
     // Transaction created successfully
@@ -51,7 +53,7 @@ test('create transaction for a token amount', () => {
             expect(txOuts).toStrictEqual([
                 {
                     value: { Token: 1050 } /* Amount payed */,
-                    locktime: 0,
+                    locktime: LOCKTIME,
                     script_public_key: 'payment_address',
                 },
                 {
@@ -90,9 +92,9 @@ test('create transaction for a token amount', () => {
                 {
                     Pay2PkH: {
                         signable_data:
-                            '2dd512e5703df4ff16361d7a51762c266b1fd4e7cc15b4cfa25c2799b709d71a',
+                            '5604f8ef313423f0496c1b219ff10f2a575d8c8a9e0d67f2f3a084c1cece72f6',
                         signature:
-                            '5d67e4b8d694b14ef003ebe5625d76f509e57f6ead4b13162066bff2f9c0a1bfea8ce64928c2e66e05bda42fd12372b2862f4f1da94e1932c36718290fd7e408',
+                            'ddf8bea9b07b154f73415c7abdba3f46e69de9cc1e51c50f22f3025d8ae491ed74a79528ae8da3202360d6c91b4329b2f53b8822e0bed3c03b3ba8dee1e0af00',
                         public_key:
                             '5e6d463ec66d7999769fa4de56f690dfb62e685b97032f5926b0cb6c93ba83c6',
                         address_version: null,
@@ -101,9 +103,9 @@ test('create transaction for a token amount', () => {
                 {
                     Pay2PkH: {
                         signable_data:
-                            '86f2677098e5daf02cf82681334baf4e2fae03cc7d4f895972f904de66b1567c',
+                            'f4a54008332abcf5041a99be9bd640b6cf95226b5724311e6d2c4b2f58052579',
                         signature:
-                            'a4882091ecbdc4cc8a74203a8c8c78503fe475fc949b6a6188e17ee90074f584bd31b7481a32428553af0613b96e2fd3aa68d179d5677d20054125ac1383ec0f',
+                            '3f5f8d17032f3b52a613e839fdaff37f116d36a252ccf22eab8eecb7b7fae8f56c9fe490008ed8eb25f14fee61dd26ce1b860d780eb02c0ef4da115d86d6c708',
                         public_key:
                             '58272ba93c1e79df280d4c417de47dbf6a7e330ba52793d7baa8e00ae5c34e59',
                         address_version: null,
@@ -112,9 +114,9 @@ test('create transaction for a token amount', () => {
                 {
                     Pay2PkH: {
                         signable_data:
-                            '1623899f51915544ca0ca6a53fdba77a846c85e0776d13fd208753c0150ac65d',
+                            'a516249b5a0cf36e9328b54bd786d8a94107c9e4ede19df9257c43d142f76e1f',
                         signature:
-                            '77a215f3a0d96b96fb92fa0b17725365fd04d1c36a159e599fdb8d0338d6e38333d74ebb4aa952ee4942a0dc97612101172ce6f9ff63a546011e6f38dcbbca09',
+                            'd9700f15cd22b3de130904335051d2469af3ae8a40db06e12b4a0e6967b24254ac0a767d410f13a8da8565b04f7324ff7e0fc5006018a792c6dfcd567fcd610c',
                         public_key:
                             'efa9dcba0f3282b3ed4a6aa1ccdb169d6685a30d7b2af7a2171a5682f3112359',
                         address_version: null,
@@ -135,6 +137,7 @@ test('create transaction for a token amount', () => {
         'excess_address',
         FETCH_BALANCE_RESPONSE_TEST,
         keyPairMap,
+        0,
     );
     expect(createTransactionFailure._unsafeUnwrapErr()).toStrictEqual(
         IErrorInternal.InsufficientFunds,

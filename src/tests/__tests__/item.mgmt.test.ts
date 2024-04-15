@@ -109,6 +109,7 @@ test('create transaction for the SEND portion of a item-based payment', () => {
         }),
         'excess_address',
         keyPairMap,
+        0,
     );
 
     if (createTransaction.isOk()) {
@@ -261,6 +262,7 @@ test('create transaction for the RECEIVE portion of a item-based payment', () =>
         }),
         'excess_address',
         keyPairMap,
+        0,
     );
 
     if (createTransaction.isOk()) {
