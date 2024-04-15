@@ -1059,6 +1059,7 @@ export class Wallet {
         paymentAsset: IAssetToken | IAssetItem,
         allKeypairs: IKeypairEncrypted[],
         excessKeypair: IKeypairEncrypted,
+        locktime: number = 0,
     ) {
         try {
             if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
@@ -1083,6 +1084,7 @@ export class Wallet {
                     excessKeypair.address,
                     balance.content.fetchBalanceResponse,
                     keyPairMap,
+                    locktime
                 ),
             );
 

@@ -189,6 +189,7 @@ export function createTx(
     excessAddress: string,
     druidInfo: IDruidValues | null,
     txIns: IGetInputsResult,
+    locktime: number,
 ): IResult<ICreateTxPayload> {
     // Inputs obtained for payment from fetching the balance from the network
     // TODO: Do something with `depletedAddresses`
@@ -203,7 +204,7 @@ export function createTx(
     const outputs: ITxOut[] = [
         {
             value: paymentAsset,
-            locktime: 0,
+            locktime,
             script_public_key: paymentAddress,
         },
     ];
@@ -257,12 +258,13 @@ export function createPaymentTx(
     excessAddress: string,
     fetchBalanceResponse: IFetchBalanceResponse,
     allKeypairs: Map<string, IKeypair>,
+    locktime: number,
 ): IResult<ICreateTxPayload> {
     // Gather inputs for the transaction
     const txIns = getInputsForTx(paymentAsset, fetchBalanceResponse, allKeypairs);
     if (txIns.isErr()) return err(txIns.error);
 
-    const transaction = createTx(paymentAddress, paymentAsset, excessAddress, null, txIns.value);
+    const transaction = createTx(paymentAddress, paymentAsset, excessAddress, null, txIns.value, locktime);
     if (transaction.isErr()) return err(transaction.error);
 
     // Update signatures
