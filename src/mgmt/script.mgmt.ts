@@ -195,8 +195,6 @@ export function updateSignatures(
                 transaction.createTx.outputs,
             );
 
-            console.log('Signable data: ', signableData);
-
             if (signableData === null) return err(IErrorInternal.UnableToConstructSignature);
             const signature = constructSignature(getStringBytes(signableData), keyPair.secretKey);
 

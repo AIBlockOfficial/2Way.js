@@ -502,9 +502,10 @@ export class Wallet {
         paymentAmount: number,
         allKeypairs: IKeypairEncrypted[],
         excessKeypair: IKeypairEncrypted,
+        locktime: number = 0,
     ): Promise<IClientResponse> {
         const paymentAsset = initIAssetToken({ Token: paymentAmount });
-        return this.makePayment(paymentAddress, paymentAsset, allKeypairs, excessKeypair);
+        return this.makePayment(paymentAddress, paymentAsset, allKeypairs, excessKeypair, locktime);
     }
 
     /**
@@ -525,11 +526,12 @@ export class Wallet {
         allKeypairs: IKeypairEncrypted[],
         excessKeypair: IKeypairEncrypted,
         metadata: string | null = null,
+        locktime: number = 0,
     ): Promise<IClientResponse> {
         const paymentAsset = initIAssetItem({
             Item: { amount: paymentAmount, genesis_hash: genesisHash, metadata },
         });
-        return this.makePayment(paymentAddress, paymentAsset, allKeypairs, excessKeypair);
+        return this.makePayment(paymentAddress, paymentAsset, allKeypairs, excessKeypair, locktime);
     }
 
     /**
@@ -1090,9 +1092,6 @@ export class Wallet {
                 ),
             );
 
-            console.log('paymentBody', paymentBody.createTx);
-            console.log('paymentBody', JSON.stringify(paymentBody.createTx));
-
             const { usedAddresses } = paymentBody;
 
             // Generate the needed headers
@@ -1102,7 +1101,6 @@ export class Wallet {
             );
 
             // Send transaction to mempool for processing
-            console.log('Hi');
             return await axios
                 .post<INetworkResponse>(
                     `${this.mempoolHost}${IAPIRoute.CreateTransactions}`,
