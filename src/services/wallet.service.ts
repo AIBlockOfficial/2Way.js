@@ -222,7 +222,7 @@ export class Wallet {
         this.storageHost = config.storageHost;
         this.intercomHost = config.intercomHost;
 
-        if (this.mempoolHost == undefined)
+        if (this.mempoolHost === undefined)
             return {
                 status: 'error',
                 reason: IErrorInternal.NoComputeHostProvided,
@@ -234,7 +234,7 @@ export class Wallet {
             this.mempoolHost,
             this.mempoolRoutesPoW,
         );
-        if (initComputeResult.status == 'error') return initComputeResult;
+        if (initComputeResult.status === 'error') return initComputeResult;
 
         // Optional - Initialize routes proof-of-work for storage host
         if (this.storageHost !== undefined) {
@@ -243,7 +243,7 @@ export class Wallet {
                 this.storageHost,
                 this.storageRoutesPoW,
             );
-            if (initStorageResult.status == 'error') return initStorageResult;
+            if (initStorageResult.status === 'error') return initStorageResult;
         }
 
         if (

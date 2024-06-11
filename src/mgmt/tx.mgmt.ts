@@ -137,7 +137,7 @@ export function getInputsForTx(
                         if (!usedAddresses.includes(address)) usedAddresses.push(address);
 
                         usedOutpointsCount++;
-                        if (outPoints.length == usedOutpointsCount) {
+                        if (outPoints.length === usedOutpointsCount) {
                             // We have used all of the inputs this address has to offer,
                             // so we can add this address to the used addresses list
                             depletedAddresses.push(address);
