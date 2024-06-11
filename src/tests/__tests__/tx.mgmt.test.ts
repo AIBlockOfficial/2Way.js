@@ -2,8 +2,38 @@
 import { IKeypair, IOutPoint, ICreateTxInScript, IErrorInternal } from '../../interfaces';
 import { ADDRESS_VERSION } from '../../mgmt';
 import * as txMgmt from '../../mgmt/tx.mgmt';
+// import * as scriptMgmt from '../../mgmt/script.mgmt';
 import { ADDRESS_LIST_TEST, FETCH_BALANCE_RESPONSE_TEST } from '../constants';
-import { initIAssetToken } from '../../utils';
+import { initIAssetToken, getStringBytes } from '../../utils';
+
+import nacl from 'tweetnacl';
+
+test("signs data using a keypair's secret key", () => {
+    const keyPair = nacl.sign.keyPair();
+    const data = 'c896822998c5c99bfe32e5ae982c46075dae1b09d0704a18492d06973854b5a6';
+    const dataAsBytes = getStringBytes(data);
+    // const _signature = scriptMgmt.constructSignature(dataAsBytes, keyPair.secretKey);
+
+    const testPubKey = Uint8Array.from(
+        Buffer.from('14a7cd29ecb0e4b64c3e58ad4fbf479155e4c6827a5a0dd0021b9a208b7f8e20', 'hex'),
+    );
+    const testSig = Uint8Array.from(
+        Buffer.from(
+            '7be8fe2f37eb51b9a3ce26765f074fb492117b52f6b012af0c6a09520c25aaca96239efbaec8cae54ba7996a7dcf56e330458af8e5c3752dbcf18693e132bd0b',
+            'hex',
+        ),
+    );
+    console.log('testSig', testSig);
+
+    console.log(
+        'sig verify from aaron',
+        nacl.sign.detached.verify(dataAsBytes, testSig, testPubKey),
+    );
+
+    const rawSig = nacl.sign.detached(dataAsBytes, keyPair.secretKey);
+    console.log('signature', rawSig);
+    expect(nacl.sign.detached.verify(dataAsBytes, rawSig, keyPair.publicKey)).toBe(true);
+});
 
 test('create transaction for a token amount', () => {
     const keyPairMap = new Map<string, IKeypair>();

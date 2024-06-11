@@ -44,7 +44,18 @@ import {
     formatAssetStructures,
     transformCreateTxResponseFromNetwork,
 } from '../utils';
-import { validateConfig, validateMasterKey, validateSeedphrase } from '../utils/validations.utils';
+import {
+    handleValidationFailures,
+    validateAddress,
+    validateConfig,
+    validateMasterKey,
+    validateSeedphrase,
+    validateTransactionHash,
+    validateMetadata,
+    validateDruid,
+    validateKeypairEncrypted,
+    validateURL,
+} from '../utils/validations.utils';
 import { mgmtClient } from './mgmt.service';
 import { ADDRESS_VERSION } from '../mgmt/constants';
 
@@ -81,33 +92,30 @@ export class Wallet {
      */
     public async initNew(config: IClientConfig, initOffline = false): Promise<IClientResponse> {
         const valid = validateConfig(config);
-        if (!valid.error) {
-            this.keyMgmt = new mgmtClient();
-            const initIResult = this.keyMgmt.initNew(config.passphrase);
-            if (!initOffline) {
-                const initNetworkIResult = await this.initNetwork(config);
-                if (initNetworkIResult.status === 'error') {
-                    return initNetworkIResult; // Return network error
-                }
+        if (valid.error) {
+            return handleValidationFailures([valid.error]);
+        }
+
+        this.keyMgmt = new mgmtClient();
+        const initIResult = this.keyMgmt.initNew(config.passphrase);
+        if (!initOffline) {
+            const initNetworkIResult = await this.initNetwork(config);
+            if (initNetworkIResult.status === 'error') {
+                return initNetworkIResult; // Return network error
             }
-            if (initIResult.isErr()) {
-                return {
-                    status: 'error',
-                    reason: initIResult.error, // Return initialization error
-                } as IClientResponse;
-            } else {
-                return {
-                    status: 'success',
-                    reason: ISuccessInternal.ClientInitialized,
-                    content: {
-                        initNewResponse: initIResult.value,
-                    },
-                } as IClientResponse;
-            }
-        } else {
+        }
+        if (initIResult.isErr()) {
             return {
                 status: 'error',
-                reason: valid.error?.message, // Return validation error
+                reason: initIResult.error, // Return initialization error
+            } as IClientResponse;
+        } else {
+            return {
+                status: 'success',
+                reason: ISuccessInternal.ClientInitialized,
+                content: {
+                    initNewResponse: initIResult.value,
+                },
             } as IClientResponse;
         }
     }
@@ -128,34 +136,27 @@ export class Wallet {
     ): Promise<IClientResponse> {
         const validConfig = validateConfig(config);
         const validMasterKey = validateMasterKey(masterKey);
-        if (!validConfig.error && !validMasterKey.error) {
-            this.keyMgmt = new mgmtClient();
-            const initIResult = this.keyMgmt.fromMasterKey(masterKey, config.passphrase);
-            if (!initOffline) {
-                const initNetworkIResult = await this.initNetwork(config);
-                if (initNetworkIResult.status === 'error') {
-                    return initNetworkIResult; // Return network error
-                }
+        if (validConfig.error || validMasterKey.error) {
+            return handleValidationFailures([validConfig.error, validMasterKey.error]);
+        }
+
+        this.keyMgmt = new mgmtClient();
+        const initIResult = this.keyMgmt.fromMasterKey(masterKey, config.passphrase);
+        if (!initOffline) {
+            const initNetworkIResult = await this.initNetwork(config);
+            if (initNetworkIResult.status === 'error') {
+                return initNetworkIResult; // Return network error
             }
-            if (initIResult.isErr()) {
-                return {
-                    status: 'error',
-                    reason: initIResult.error, // Return initialization error
-                } as IClientResponse;
-            } else {
-                return {
-                    status: 'success',
-                    reason: ISuccessInternal.ClientInitialized,
-                } as IClientResponse;
-            }
-        } else {
+        }
+        if (initIResult.isErr()) {
             return {
                 status: 'error',
-                reason: validConfig.error
-                    ? validConfig.error.message
-                    : '' + ' , ' + validMasterKey.error
-                    ? validMasterKey.error?.message
-                    : '', // Return validation error
+                reason: initIResult.error, // Return initialization error
+            } as IClientResponse;
+        } else {
+            return {
+                status: 'success',
+                reason: ISuccessInternal.ClientInitialized,
             } as IClientResponse;
         }
     }
@@ -176,39 +177,32 @@ export class Wallet {
     ): Promise<IClientResponse> {
         const validConfig = validateConfig(config);
         const validSeedphrase = validateSeedphrase(seedPhrase);
-        if (!validConfig.error && !validSeedphrase.error) {
-            this.keyMgmt = new mgmtClient();
-            const initIResult = this.keyMgmt.fromSeed(seedPhrase, config.passphrase);
-            if (!initOffline) {
-                const initNetworkIResult = await this.initNetwork(config);
-                if (initNetworkIResult.status === 'error') {
-                    return initNetworkIResult; // Return network error
-                }
+        if (validConfig.error || validSeedphrase.error) {
+            return handleValidationFailures([validConfig.error, validSeedphrase.error]);
+        }
+
+        this.keyMgmt = new mgmtClient();
+        const initIResult = this.keyMgmt.fromSeed(seedPhrase, config.passphrase);
+        if (!initOffline) {
+            const initNetworkIResult = await this.initNetwork(config);
+            if (initNetworkIResult.status === 'error') {
+                return initNetworkIResult; // Return network error
             }
-            if (initIResult.isErr()) {
-                return {
-                    status: 'error',
-                    reason: initIResult.error, // Return initialization error
-                } as IClientResponse;
-            } else {
-                return {
-                    status: 'success',
-                    reason: ISuccessInternal.ClientInitialized,
-                    content: {
-                        fromSeedResponse: initIResult.value,
-                    },
-                } as IClientResponse;
-            }
-        } else {
+        }
+        if (initIResult.isErr()) {
             return {
                 status: 'error',
-                reason: validConfig.error
-                    ? validConfig.error.message
-                    : '' + ' , ' + validSeedphrase.error
-                    ? validSeedphrase.error?.message
-                    : '', // Return validation error
+                reason: initIResult.error, // Return initialization error
             } as IClientResponse;
         }
+
+        return {
+            status: 'success',
+            reason: ISuccessInternal.ClientInitialized,
+            content: {
+                fromSeedResponse: initIResult.value,
+            },
+        } as IClientResponse;
     }
 
     /**
@@ -219,6 +213,11 @@ export class Wallet {
      * @memberof Wallet
      */
     public async initNetwork(config: IClientConfig): Promise<IClientResponse> {
+        const validConfig = validateConfig(config);
+        if (validConfig.error) {
+            return handleValidationFailures([validConfig.error]);
+        }
+
         this.mempoolHost = config.mempoolHost;
         this.storageHost = config.storageHost;
         this.intercomHost = config.intercomHost;
@@ -298,6 +297,11 @@ export class Wallet {
      * @memberof Wallet
      */
     async fetchBalance(addressList: string[]): Promise<IClientResponse> {
+        const validAddresses = addressList.map((address) => validateAddress(address));
+        if (validAddresses.find((address) => address.error)) {
+            return handleValidationFailures(validAddresses.map((address) => address.error));
+        }
+
         try {
             if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
                 throw new Error(IErrorInternal.ClientNotInitialized);
@@ -340,6 +344,11 @@ export class Wallet {
      * @memberof Wallet
      */
     public async fetchTransactions(transactionHashes: string[]): Promise<IClientResponse> {
+        const validHashes = transactionHashes.map((hash) => validateTransactionHash(hash));
+        if (validHashes.find((hash) => hash.error)) {
+            return handleValidationFailures(validHashes.map((hash) => hash.error));
+        }
+
         try {
             if (!this.keyMgmt) throw new Error(IErrorInternal.ClientNotInitialized);
             if (!this.storageHost || !this.storageRoutesPoW)
@@ -391,6 +400,11 @@ export class Wallet {
         amount: number = ITEM_DEFAULT,
         metadata: string | null = null,
     ): Promise<IClientResponse> {
+        const validMetadata = metadata ? validateMetadata(metadata) : { error: undefined };
+        if (validMetadata.error) {
+            return handleValidationFailures([validMetadata.error]);
+        }
+
         try {
             if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
                 throw new Error(IErrorInternal.ClientNotInitialized);
@@ -447,6 +461,15 @@ export class Wallet {
      * @memberof Wallet
      */
     signMessage(keyPairsToSignWith: IKeypairEncrypted[], message: string): IClientResponse {
+        // Perform validation checks
+        const validKeypairs = keyPairsToSignWith.map((keypair) =>
+            validateKeypairEncrypted(keypair),
+        );
+        if (validKeypairs.find((keypair) => keypair.error)) {
+            return handleValidationFailures(validKeypairs.map((keypair) => keypair.error));
+        }
+
+        // Otherwise handle the response
         try {
             if (this.keyMgmt === undefined) throw new Error(IErrorInternal.ClientNotInitialized);
             const keyPairs = throwIfErr(this.keyMgmt.decryptKeypairs(keyPairsToSignWith));
@@ -471,6 +494,14 @@ export class Wallet {
         signatures: IGenericKeyPair<string>,
         keyPairs: IKeypairEncrypted[],
     ): IClientResponse {
+        // Perform validation checks
+        const validKeypairs = keyPairs.map((keypair) => validateKeypairEncrypted(keypair));
+
+        if (validKeypairs.find((keypair) => keypair.error)) {
+            return handleValidationFailures(validKeypairs.map((keypair) => keypair.error));
+        }
+
+        // Otherwise handle the response
         try {
             if (this.keyMgmt === undefined) throw new Error(IErrorInternal.ClientNotInitialized);
             const keyPairsUnencrypted = throwIfErr(this.keyMgmt.decryptKeypairs(keyPairs));
@@ -502,8 +533,26 @@ export class Wallet {
         paymentAmount: number,
         allKeypairs: IKeypairEncrypted[],
         excessKeypair: IKeypairEncrypted,
-        locktime: number = 0,
+        locktime = 0,
     ): Promise<IClientResponse> {
+        // Perform validation checks
+        const validAddress = validateAddress(paymentAddress);
+        const validExcessKeypair = validateKeypairEncrypted(excessKeypair);
+        const validKeypairs = allKeypairs.map((keypair) => validateKeypairEncrypted(keypair));
+
+        if (
+            validAddress.error ||
+            validExcessKeypair.error ||
+            validKeypairs.find((keypair) => keypair.error)
+        ) {
+            return handleValidationFailures([
+                validAddress.error,
+                validExcessKeypair.error,
+                ...validKeypairs.map((keypair) => keypair.error),
+            ]);
+        }
+
+        // Otherwise handle the response
         const paymentAsset = initIAssetToken({ Token: paymentAmount });
         return this.makePayment(paymentAddress, paymentAsset, allKeypairs, excessKeypair, locktime);
     }
@@ -526,8 +575,32 @@ export class Wallet {
         allKeypairs: IKeypairEncrypted[],
         excessKeypair: IKeypairEncrypted,
         metadata: string | null = null,
-        locktime: number = 0,
+        locktime = 0,
     ): Promise<IClientResponse> {
+        // Perform validation checks
+        const validAddress = validateAddress(paymentAddress);
+        const validGenesisHash = validateTransactionHash(genesisHash);
+        const validExcessKeypair = validateKeypairEncrypted(excessKeypair);
+        const validMetadata = metadata ? validateMetadata(metadata) : { error: undefined };
+        const validKeypairs = allKeypairs.map((keypair) => validateKeypairEncrypted(keypair));
+
+        if (
+            validAddress.error ||
+            validGenesisHash.error ||
+            validExcessKeypair.error ||
+            validMetadata.error ||
+            validKeypairs.find((keypair) => keypair.error)
+        ) {
+            return handleValidationFailures([
+                validAddress.error,
+                validGenesisHash.error,
+                validExcessKeypair.error,
+                validMetadata.error,
+                ...validKeypairs.map((keypair) => keypair.error),
+            ]);
+        }
+
+        // Otherwise handle the response
         const paymentAsset = initIAssetItem({
             Item: { amount: paymentAmount, genesis_hash: genesisHash, metadata },
         });
@@ -553,6 +626,24 @@ export class Wallet {
         receiveAddress: IKeypairEncrypted,
         locktime = 0,
     ): Promise<IClientResponse> {
+        // Perform validation checks
+        const validAddress = validateAddress(paymentAddress);
+        const validReceiveKp = validateKeypairEncrypted(receiveAddress);
+        const validKeypairs = allKeypairs.map((keypair) => validateKeypairEncrypted(keypair));
+
+        if (
+            validAddress.error ||
+            validReceiveKp.error ||
+            validKeypairs.find((keypair) => keypair.error)
+        ) {
+            return handleValidationFailures([
+                validAddress.error,
+                validReceiveKp.error,
+                ...validKeypairs.map((keypair) => keypair.error),
+            ]);
+        }
+
+        // Otherwise handle the response
         try {
             if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
                 throw new Error(IErrorInternal.ClientNotInitialized);
@@ -667,6 +758,18 @@ export class Wallet {
         pendingResponse: IResponseIntercom<IPendingIbTxDetails>,
         allKeypairs: IKeypairEncrypted[],
     ): Promise<IClientResponse> {
+        // Perform validation checks
+        const validDruid = validateDruid(druid);
+        const validKeypairs = allKeypairs.map((keypair) => validateKeypairEncrypted(keypair));
+
+        if (validDruid.error || validKeypairs.find((keypair) => keypair.error)) {
+            return handleValidationFailures([
+                validDruid.error,
+                ...validKeypairs.map((keypair) => keypair.error),
+            ]);
+        }
+
+        // Otherwise handle the response
         return this.handleIbTxResponse(druid, pendingResponse, 'accepted', allKeypairs);
     }
 
@@ -685,6 +788,18 @@ export class Wallet {
         pendingResponse: IResponseIntercom<IPendingIbTxDetails>,
         allKeypairs: IKeypairEncrypted[],
     ): Promise<IClientResponse> {
+        // Perform validation checks
+        const validDruid = validateDruid(druid);
+        const validKeypairs = allKeypairs.map((keypair) => validateKeypairEncrypted(keypair));
+
+        if (validDruid.error || validKeypairs.find((keypair) => keypair.error)) {
+            return handleValidationFailures([
+                validDruid.error,
+                ...validKeypairs.map((keypair) => keypair.error),
+            ]);
+        }
+
+        // Otherwise handle the response
         return this.handleIbTxResponse(druid, pendingResponse, 'rejected', allKeypairs);
     }
 
@@ -700,6 +815,11 @@ export class Wallet {
         allKeypairs: IKeypairEncrypted[],
         allEncryptedTxs: ICreateTransactionEncrypted[],
     ): Promise<IClientResponse> {
+        const validKeypairs = allKeypairs.map((keypair) => validateKeypairEncrypted(keypair));
+        if (validKeypairs.find((keypair) => keypair.error)) {
+            return handleValidationFailures(validKeypairs.map((keypair) => keypair.error));
+        }
+
         try {
             if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
                 throw new Error(IErrorInternal.ClientNotInitialized);
@@ -862,6 +982,17 @@ export class Wallet {
         addressList: string[],
         seedRegenThreshold: number = SEED_REGEN_THRES,
     ): Promise<IClientResponse> {
+        // Perform validation checks
+        const validSeedphrase = validateSeedphrase(seedPhrase);
+        const validAddresses = addressList.map((address) => validateAddress(address));
+        if (validSeedphrase.error || validAddresses.find((address) => address.error)) {
+            return handleValidationFailures([
+                validSeedphrase.error,
+                ...validAddresses.map((address) => address.error),
+            ]);
+        }
+
+        // Regenerate addresses
         try {
             if (!this.keyMgmt) throw new Error(IErrorInternal.ClientNotInitialized);
             const foundAddr = throwIfErr(
@@ -900,6 +1031,11 @@ export class Wallet {
         allAddresses: string[],
         addressVersion: null | number = ADDRESS_VERSION,
     ): IClientResponse {
+        const validAddresses = allAddresses.map((address) => validateAddress(address));
+        if (validAddresses.find((address) => address.error)) {
+            return handleValidationFailures(validAddresses.map((address) => address.error));
+        }
+
         try {
             if (!this.keyMgmt) throw new Error(IErrorInternal.ClientNotInitialized);
             return {
@@ -975,6 +1111,11 @@ export class Wallet {
      * @memberof Wallet
      */
     decryptKeypair(encryptedKeypair: IKeypairEncrypted): IClientResponse {
+        const validKeypair = validateKeypairEncrypted(encryptedKeypair);
+        if (validKeypair.error) {
+            return handleValidationFailures([validKeypair.error]);
+        }
+
         try {
             if (!this.keyMgmt) throw new Error(IErrorInternal.ClientNotInitialized);
             return {
@@ -1002,6 +1143,11 @@ export class Wallet {
      * @return {*} {void}
      */
     saveKeypairs(encryptedKeypair: IKeypairEncrypted[]): IClientResponse {
+        const validKeypairs = encryptedKeypair.map((kp) => validateKeypairEncrypted(kp));
+        if (validKeypairs.find((kp) => kp.error)) {
+            return handleValidationFailures(validKeypairs.map((kp) => kp.error));
+        }
+
         try {
             if (!this.keyMgmt) throw new Error(IErrorInternal.ClientNotInitialized);
             throwIfErr(this.keyMgmt.saveKeypairs(encryptedKeypair));
@@ -1065,6 +1211,24 @@ export class Wallet {
         excessKeypair: IKeypairEncrypted,
         locktime = 0,
     ) {
+        // Perform validation checks
+        const validPaymentAddress = validateAddress(paymentAddress);
+        const validKeypairs = allKeypairs.map((kp) => validateKeypairEncrypted(kp));
+        const validExcessKeypair = validateKeypairEncrypted(excessKeypair);
+
+        if (
+            validPaymentAddress.error ||
+            validKeypairs.find((kp) => kp.error) ||
+            validExcessKeypair.error
+        ) {
+            return handleValidationFailures([
+                validPaymentAddress.error,
+                ...validKeypairs.map((kp) => kp.error),
+                validExcessKeypair.error,
+            ]);
+        }
+
+        // Proceed with payment
         try {
             if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
                 throw new Error(IErrorInternal.ClientNotInitialized);
@@ -1156,6 +1320,15 @@ export class Wallet {
         allKeypairs: IKeypairEncrypted[],
         locktime = 0,
     ): Promise<IClientResponse> {
+        const validDruid = validateDruid(druid);
+        const validKeypairs = allKeypairs.map((kp) => validateKeypairEncrypted(kp));
+        if (validDruid.error || validKeypairs.find((kp) => kp.error)) {
+            return handleValidationFailures([
+                validDruid.error,
+                ...validKeypairs.map((kp) => kp.error),
+            ]);
+        }
+
         try {
             if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
                 throw new Error(IErrorInternal.ClientNotInitialized);
@@ -1273,6 +1446,9 @@ export class Wallet {
      * @memberof Wallet
      */
     private async getDebugData(host: string): Promise<IClientResponse> {
+        const validHost = validateURL(host);
+        if (validHost.error) return handleValidationFailures([validHost.error]);
+
         try {
             const routesPow =
                 host === this.mempoolHost ? this.mempoolRoutesPoW : this.storageRoutesPoW;
