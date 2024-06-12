@@ -88,7 +88,7 @@ declare module 'bitcore-lib' {
         readonly hash: string;
         nid: string;
 
-        constructor(serialized?: any);
+        constructor(serialized?: string);
 
         from(utxos: Transaction.UnspentOutput[]): this;
         to(address: Address[] | Address | string, amount: number): this;
@@ -155,6 +155,8 @@ declare module 'bitcore-lib' {
 
     export class HDPrivateKey {
         readonly hdPublicKey: HDPublicKey;
+        readonly xprivkey: string;
+        readonly xpubkey: string;
 
         constructor(data?: string | Buffer | object);
 

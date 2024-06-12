@@ -18,7 +18,7 @@ export const CONFIG = {
     mempoolHost: 'https://mempool.aiblock.ch',
     storageHost: 'https://storage.aiblock.ch',
     intercomHost: 'http://0.0.0.0:3030',
-    passphrase: '',
+    passphrase: 'test',
 };
 
 export const SEED = 'army van defense carry jealous true garbage claim echo media make crunch';

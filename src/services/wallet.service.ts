@@ -55,6 +55,7 @@ import {
     validateDruid,
     validateKeypairEncrypted,
     validateURL,
+    validateAsset,
 } from '../utils/validations.utils';
 import { mgmtClient } from './mgmt.service';
 import { ADDRESS_VERSION } from '../mgmt/constants';
@@ -627,6 +628,8 @@ export class Wallet {
         locktime = 0,
     ): Promise<IClientResponse> {
         // Perform validation checks
+        const validSendingAsset = validateAsset(sendingAsset);
+        const validReceivingAsset = validateAsset(receivingAsset);
         const validAddress = validateAddress(paymentAddress);
         const validReceiveKp = validateKeypairEncrypted(receiveAddress);
         const validKeypairs = allKeypairs.map((keypair) => validateKeypairEncrypted(keypair));
@@ -634,6 +637,8 @@ export class Wallet {
         if (
             validAddress.error ||
             validReceiveKp.error ||
+            validSendingAsset.error ||
+            validReceivingAsset.error ||
             validKeypairs.find((keypair) => keypair.error)
         ) {
             return handleValidationFailures([
@@ -1450,17 +1455,8 @@ export class Wallet {
         if (validHost.error) return handleValidationFailures([validHost.error]);
 
         try {
-            const routesPow =
-                host === this.mempoolHost ? this.mempoolRoutesPoW : this.storageRoutesPoW;
-            const headers = this.getRequestIdAndNonceHeadersForRoute(
-                routesPow,
-                IAPIRoute.DebugData,
-            );
             return await axios
-                .get<INetworkResponse>(`${host}${IAPIRoute.DebugData}`, {
-                    ...headers,
-                    validateStatus: () => true,
-                })
+                .get<INetworkResponse>(`${host}${IAPIRoute.DebugData}`)
                 .then(async (response) => {
                     return {
                         status: castAPIStatus(response.data.status),

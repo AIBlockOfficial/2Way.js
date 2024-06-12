@@ -161,7 +161,7 @@ test('sign message with given keypairs', async () => {
 
     const MSG = 'hello, world';
 
-    await walletInstance.initNew({ passphrase: '' }, true).then((res) => {
+    await walletInstance.initNew({ passphrase: 'test' }, true).then((res) => {
         expect(res.status).toBe('success');
     });
 

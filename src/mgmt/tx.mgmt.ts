@@ -31,6 +31,7 @@ import {
 import { NETWORK_VERSION } from './constants';
 import { getAddressVersion } from './key.mgmt';
 import { constructSignature, constructTxInOutSignableHash, updateSignatures } from './script.mgmt';
+import { validateAsset, validateAddress } from '../utils/validations.utils';
 
 /* -------------------------------------------------------------------------- */
 /*                          Transaction Construction                          */
@@ -57,6 +58,10 @@ export function getInputsForTx(
     fetchBalanceResponse: IFetchBalanceResponse,
     allKeypairs: Map<string, IKeypair>,
 ): IResult<IGetInputsResult> {
+    // Perform validation checks
+    const validPaymentAsset = validateAsset(paymentAsset);
+    if (validPaymentAsset.error) return err(IErrorInternal.InvalidInputs);
+
     // Check to see if there's enough funds
     const isOfTypeAssetToken = isOfType<IAssetToken>(paymentAsset, initIAssetToken());
     const enoughRunningTotal = isOfTypeAssetToken
@@ -191,6 +196,15 @@ export function createTx(
     txIns: IGetInputsResult,
     locktime: number,
 ): IResult<ICreateTxPayload> {
+    // Perform validation checks
+    const validPaymentAddress = validateAddress(paymentAddress);
+    const validExcessAddress = validateAddress(excessAddress);
+    const validPaymentAsset = validateAsset(paymentAsset);
+
+    if (validPaymentAddress.error || validExcessAddress.error || validPaymentAsset.error) {
+        return err(IErrorInternal.InvalidInputs);
+    }
+
     // Inputs obtained for payment from fetching the balance from the network
     // TODO: Do something with `depletedAddresses`
     const { usedAddresses, totalAmountGathered, inputs } = txIns;

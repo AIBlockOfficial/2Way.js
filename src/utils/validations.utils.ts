@@ -4,6 +4,8 @@ import {
     IClientResponse,
     IMasterKeyEncrypted,
     IKeypairEncrypted,
+    IAssetItem,
+    IAssetToken,
 } from '../interfaces';
 
 const uri_scheme = {
@@ -36,6 +38,35 @@ const byteLength = (length: number) => {
 
 //================ VALIDATIONS ===================//
 
+export const validateAsset = (value: IAssetItem | IAssetToken) => {
+    if (value.hasOwnProperty("Item")) return validateAssetItem(value as IAssetItem);
+    
+    return validateAssetToken(value as IAssetToken);
+}
+
+export const validateAssetItem = (value: IAssetItem) => {
+    const assetItemSchema = Joi.object({
+        Item: Joi.object({
+            amount: Joi.number().required(),
+            genesis_hash: Joi.string().required(),
+            metadata: Joi.string().allow(null).required(),
+        }).required(),
+    });
+    return assetItemSchema.validate(value);
+}
+
+export const validateAssetToken = (value: IAssetToken) => {
+    const assetTokenSchema = Joi.object({
+        Token: Joi.number().required(),
+    });
+    return assetTokenSchema.validate(value);
+}
+
+export const validateMessage = (value: string) => {
+    const messageSchema = Joi.string().required();
+    return messageSchema.validate(value);
+}
+
 export const validateMetadata = (value: string | null) => {
     return byteLength(METADATA_MAX_LENGTH).validate(value);
 };
@@ -46,7 +77,7 @@ export const validateTransactionHash = (hash: string) => {
 };
 
 export const validateAddress = (address: string) => {
-    const addressSchema = Joi.string().pattern(new RegExp('^g[a-f0-9]{64}$'));
+    const addressSchema = Joi.string().pattern(new RegExp('^[a-f0-9]{64}$'));
     return addressSchema.validate(address);
 };
 
@@ -62,9 +93,9 @@ export const validateURL = (url: string) => {
 
 export const validateConfig = (config: IClientConfig) => {
     const configSchema = Joi.object({
-        mempoolHost: Joi.string().uri(uri_scheme),
-        storageHost: Joi.string().uri(uri_scheme),
-        intercomHost: Joi.string().uri(uri_scheme),
+        mempoolHost: Joi.string().uri(uri_scheme).optional(),
+        storageHost: Joi.string().uri(uri_scheme).optional(),
+        intercomHost: Joi.string().uri(uri_scheme).optional(),
         passphrase: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{0,30}$')).required(),
     });
     return configSchema.validate(config);
@@ -72,7 +103,7 @@ export const validateConfig = (config: IClientConfig) => {
 
 export const validateKeypairEncrypted = (keypair: IKeypairEncrypted) => {
     const keypairSchema = Joi.object({
-        address: Joi.string().pattern(new RegExp('^g[a-f0-9]{64}$')).required(),
+        address: Joi.string().pattern(new RegExp('^[a-f0-9]{64}$')).required(),
         nonce: Joi.string().required(),
         save: Joi.string().required(),
         version: Joi.number().allow(null).required(),
