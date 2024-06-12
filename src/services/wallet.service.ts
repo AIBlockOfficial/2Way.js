@@ -6,7 +6,6 @@ import {
     IAssetToken,
     IClientConfig,
     IClientResponse,
-    ICreateTransaction,
     ICreateTransactionEncrypted,
     IDruidExpectation,
     IErrorInternal,
@@ -14,10 +13,7 @@ import {
     IKeypairEncrypted,
     IMasterKeyEncrypted,
     INetworkResponse,
-    IPendingIbTxDetails,
-    IRequestValenceDelBody,
-    IRequestValenceGetBody,
-    IResponseValence,
+    IPending2WTxDetails,
     ISuccessInternal,
 } from '../interfaces';
 import {
@@ -32,17 +28,15 @@ import {
 import {
     castAPIStatus,
     createIdAndNonceHeaders,
-    filterValenceDataForPredicates,
-    filterValidValenceData,
     formatSingleCustomKeyValuePair,
-    generateValenceDelBody,
-    generateValenceGetBody,
     generateValenceSetBody,
     initIAssetItem,
     initIAssetToken,
     throwIfErr,
     formatAssetStructures,
     transformCreateTxResponseFromNetwork,
+    generateVerificationHeaders,
+    filterValidValenceData,
 } from '../utils';
 import { validateConfig, validateMasterKey, validateSeedphrase } from '../utils/validations.utils';
 import { mgmtClient } from './mgmt.service';
@@ -70,8 +64,333 @@ export class Wallet {
         this.mempoolRoutesPoW = undefined;
         this.storageRoutesPoW = undefined;
     }
+    /**
+     * Handle a item-based payment by either accepting or rejecting the payment
+     *
+     * @private
+     * @param {string} druid - Unique DRUID value associated with this payment
+     * @param {IResponseValence<IPending2WTxDetails>} pendingResponse - Pending item-based payments response as received from the valence server
+     * @param {('accepted' | 'rejected')} status - Status to se the payment to
+     * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
+     * @return {*}  {Promise<IClientResponse>}
+     * @memberof Wallet
+     */
+    private async handleIbTxResponse(
+        druid: string,
+        pendingResponse: IPending2WTxDetails,
+        status: 'accepted' | 'rejected',
+        allKeypairs: IKeypairEncrypted[],
+    ): Promise<IClientResponse> {
+        try {
+            if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
+                throw new Error(IErrorInternal.ClientNotInitialized);
+            if (!this.valenceHost) throw new Error(IErrorInternal.ValenceNotInitialized);
+            const [allAddresses, keyPairMap] = throwIfErr(
+                this.keyMgmt.getAllAddressesAndKeypairMap(allKeypairs),
+            );
+
+            // Update balance
+            const balance = await this.fetchBalance(allAddresses);
+            if (balance.status !== 'success' || !balance.content?.fetchBalanceResponse)
+                throw new Error(balance.reason);
+
+            const txInfo = pendingResponse;
+
+            // Get the key-pair assigned to this receiver address
+            const receiverKeypair = keyPairMap.get(txInfo.receiverExpectation.to);
+            if (!receiverKeypair) throw new Error(IErrorInternal.UnableToGetKeypair);
+
+            // Set the status of the pending request
+            txInfo.status = status;
+
+            console.log('txInfo: ', txInfo)
+
+            // Handle case for 'accepted'; create and send transaction to mempool node
+            if (status === 'accepted') {
+                console.log('create transaction')
+                const sendIbTxHalf = throwIfErr(
+                    // Sender expectation and receiver expectation context is switched
+                    // in comparison to `make2WayPayment` since we are the receiving party
+                    createIbTxHalf(
+                        balance.content.fetchBalanceResponse,
+                        druid,
+                        txInfo.receiverExpectation, // What we expect from the other party
+                        txInfo.senderExpectation, // What the other party can expect from us
+                        receiverKeypair.address,
+                        keyPairMap,
+                    ),
+                );
+
+                console.log('construct tx ins')
+                // Construct our 'from` address using our transaction inputs
+                txInfo.senderExpectation.from = throwIfErr(
+                    constructTxInsAddress(sendIbTxHalf.createTx.inputs),
+                );
+
+                // Generate the required headers
+                const headers = this.getRequestIdAndNonceHeadersForRoute(
+                    this.mempoolRoutesPoW,
+                    IAPIRoute.CreateTransactions,
+                );
+
+                console.log('generate network headers', headers)
+
+
+                console.log('send transaction to mempool')
+                console.log(JSON.stringify(sendIbTxHalf.createTx))
+
+                // Send transaction to mempool to be added to the current DRUID pool
+                await axios
+                    .post<INetworkResponse>(
+                        // We send this transaction to the mempool node specified by the sending party
+                        `${txInfo.mempoolHost}${IAPIRoute.CreateTransactions}`,
+                        [sendIbTxHalf.createTx],
+                        { ...headers, validateStatus: () => true },
+                    )
+                    .then((response) => {
+                        if (castAPIStatus(response.data.status) !== 'success')
+                            throw new Error(response.data.reason);
+                    })
+                    .catch(async (error) => {
+                        if (error instanceof Error) throw new Error(error.message);
+                        else throw new Error(`${error}`);
+                    });
+            }
+
+            console.log('transaction sent')
+
+            // Send the updated status of the transaction on the valence server
+            const sendBody = generateValenceSetBody(txInfo.senderExpectation.to, txInfo)
+            const sendHeaders = generateVerificationHeaders(txInfo.senderExpectation.to, receiverKeypair)
+
+            // Update the transaction details on the valence server
+            await axios
+                .post(`${this.valenceHost}${IAPIRoute.ValenceSet}`,
+                    sendBody,
+                    sendHeaders)
+                .catch(async (error) => {
+                    if (error instanceof Error) throw new Error(error.message);
+                    else throw new Error(`${error}`);
+                });
+
+            return {
+                status: 'success',
+                reason: ISuccessInternal.RespondedTo2WPayment,
+            } as IClientResponse;
+        } catch (error) {
+            return {
+                status: 'error',
+                reason: `${error}`,
+            };
+        }
+    }
 
     /**
+ * Accept a item-based payment
+ *
+ * @param {string} druid - Unique DRUID value associated with a item-based payment
+ * @param {IResponseValence<IPending2WTxDetails>} pendingResponse - 2-Way transaction(s) information as received from the valence server
+ * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
+ * @return {*}  {Promise<IClientResponse>}
+ * @memberof Wallet
+ */
+    public async accept2WayPayment(
+        druid: string,
+        pendingResponse: IPending2WTxDetails,
+        allKeypairs: IKeypairEncrypted[],
+    ): Promise<IClientResponse> {
+        return this.handleIbTxResponse(druid, pendingResponse, 'accepted', allKeypairs);
+    }
+
+    /**
+     * Reject a item-based payment
+     *
+     * @param {string} druid - Unique DRUID value associated with a item-based payment
+     * @param {IResponseValence<IPending2WTxDetails>} pendingResponse - 2-Way transaction(s) information as received from the valence server
+     * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
+     * @return {*}  {Promise<IClientResponse>}
+     * @memberof Wallet
+     */
+
+    public async reject2WayPayment(
+        druid: string,
+        pendingResponse: IPending2WTxDetails,
+        allKeypairs: IKeypairEncrypted[],
+    ): Promise<IClientResponse> {
+        return this.handleIbTxResponse(druid, pendingResponse, 'rejected', allKeypairs);
+    }
+
+    /**
+     * Fetch pending item-based payments from the valence server
+     *
+     * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
+     * @param {ICreateTransactionEncrypted[]} allEncryptedTxs - A list of all existing saved transactions (encrypted)
+     * @return {*}  {Promise<IClientResponse>}
+     * @memberof Wallet
+     */
+    public async fetchPending2WayPayment(
+        keypair: IKeypairEncrypted,
+        allEncryptedTxs?: ICreateTransactionEncrypted[],
+    ): Promise<IClientResponse> {
+        try {
+            if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
+                throw new Error(IErrorInternal.ClientNotInitialized);
+            if (!this.valenceHost) throw new Error(IErrorInternal.ValenceNotInitialized);
+
+            const kp = throwIfErr(this.keyMgmt.decryptKeypair(keypair));
+            const sendHeaders = generateVerificationHeaders(keypair.address, kp)
+
+            // Get pending 2WT transactions
+            let responseData = await axios
+                .get<INetworkResponse>(
+                    `${this.valenceHost}${IAPIRoute.ValenceGet}`,
+                    sendHeaders
+                )
+                .then((response) => {
+                    return response.data; // Data returned from the valence server is string and needs to be parsed
+                })
+                .catch(async (error) => {
+                    if (error instanceof Error) throw new Error(error.message);
+                    else throw new Error(`${error}`);
+                });
+
+            if (!responseData.content) throw new Error(IErrorInternal.NoContentReturned);
+
+            return {
+                status: 'success',
+                reason: ISuccessInternal.Pending2WPaymentsFetched,
+                content: {
+                    fetchPending2WResponse: responseData.content,
+                }
+            } as IClientResponse
+        } catch (error) {
+            return {
+                status: 'error',
+                reason: `${error}`,
+            } as IClientResponse;
+        }
+    }
+
+    /**
+     * Make a item-based payment to a specified address
+     *
+     * @param {string} paymentAddress - Address to make the payment to
+     * @param {(IAssetItem | IAssetToken)} sendingAsset - The asset to pay
+     * @param {(IAssetItem | IAssetToken)} receivingAsset - The asset to receive
+     * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
+     * @param {IKeypairEncrypted} receiveAddress - A key-pair to assign the "receiving" asset to
+     * @return {*}  {Promise<IClientResponse>}
+     * @memberof Wallet
+     */
+    public async make2WayPayment(
+        paymentAddress: string,
+        sendingAsset: IAssetItem | IAssetToken,
+        receivingAsset: IAssetItem | IAssetToken,
+        allKeypairs: IKeypairEncrypted[],
+        receiveAddress: IKeypairEncrypted,
+    ): Promise<IClientResponse> {
+        try {
+            if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
+                throw new Error(IErrorInternal.ClientNotInitialized);
+            if (!this.valenceHost) throw new Error(IErrorInternal.ValenceNotInitialized);
+            const senderKeypair = throwIfErr(this.keyMgmt.decryptKeypair(receiveAddress));
+            const [allAddresses, keyPairMap] = throwIfErr(
+                this.keyMgmt.getAllAddressesAndKeypairMap(allKeypairs),
+            );
+
+            // Update balance
+            const balance = await this.fetchBalance(allAddresses);
+            if (balance.status !== 'success' || !balance.content?.fetchBalanceResponse)
+                throw new Error(balance.reason);
+
+            if (allAddresses.length === 0) throw new Error(IErrorInternal.NoKeypairsProvided);
+
+            // Generate a DRUID value for this transaction
+            const druid = throwIfErr(this.keyMgmt.getNewDRUID());
+
+            const senderExpectation: IDruidExpectation = {
+                from: '', // This field needs to be calculated by the other party and populated by us upon acceptance
+                to: senderKeypair.address,
+                asset: receivingAsset,
+            };
+
+            const receiverExpectation: IDruidExpectation = {
+                from: '', // This is calculated by us after the transaction is created and then sent to the valence server
+                to: paymentAddress,
+                asset: sendingAsset,
+            };
+
+            // Create "sender" half transaction with some missing data in DruidExpectations objects (`from`)
+            const sendIbTxHalf = throwIfErr(
+                createIbTxHalf(
+                    balance.content.fetchBalanceResponse,
+                    druid,
+                    senderExpectation,
+                    receiverExpectation,
+                    senderKeypair.address,
+                    keyPairMap,
+                ),
+            );
+
+            // Create transaction struct has successfully been created
+            // now we encrypt the created transaction for storage
+            const encryptedTx = throwIfErr(this.keyMgmt.encryptTransaction(sendIbTxHalf.createTx));
+
+            // Create "sender" details and expectations for valence server
+            receiverExpectation.from = throwIfErr(
+                constructTxInsAddress(sendIbTxHalf.createTx.inputs),
+            );
+            if (sendIbTxHalf.createTx.druid_info === null)
+                throw new Error(IErrorInternal.NoDRUIDValues);
+
+            // Generate the values to be placed on the valence server for the receiving party
+            const valuePayload: IPending2WTxDetails = {
+                druid,
+                senderExpectation,
+                receiverExpectation,
+                status: 'pending', // Status of the 2 way transaction
+                mempoolHost: this.mempoolHost,
+            };
+
+            const sendBody = generateValenceSetBody(paymentAddress, valuePayload)
+            const sendHeaders = generateVerificationHeaders(paymentAddress, senderKeypair)
+
+            console.log('headers: ', sendHeaders)
+            console.log('body: ', sendBody)
+
+            // Send the transaction details to the valence server for the receiving party to inspect
+            return await axios
+                .post(
+                    `${this.valenceHost}${IAPIRoute.ValenceSet}`,
+                    sendBody,
+                    sendHeaders)
+                .then(() => {
+                    // Payment now getting processed
+                    return {
+                        status: 'success',
+                        reason: ISuccessInternal.TwoWayPaymentProcessing,
+                        content: {
+                            make2WayPaymentResponse: {
+                                druid,
+                                encryptedTx: encryptedTx,
+                            },
+                        },
+                    } as IClientResponse;
+                })
+                .catch(async (error) => {
+                    if (error instanceof Error) throw new Error(error.message);
+                    else throw new Error(`${error}`);
+                });
+        } catch (error) {
+            return {
+                status: 'error',
+                reason: `${error}`,
+            } as IClientResponse;
+        }
+    }
+
+    /**
+     * 
      * Initialize a new instance of the client without providing a master key or seed phrase
      *
      * @param {IClientConfig} config - Additional configuration parameters
@@ -154,8 +473,8 @@ export class Wallet {
                 reason: validConfig.error
                     ? validConfig.error.message
                     : '' + ' , ' + validMasterKey.error
-                    ? validMasterKey.error?.message
-                    : '', // Return validation error
+                        ? validMasterKey.error?.message
+                        : '', // Return validation error
             } as IClientResponse;
         }
     }
@@ -205,8 +524,8 @@ export class Wallet {
                 reason: validConfig.error
                     ? validConfig.error.message
                     : '' + ' , ' + validSeedphrase.error
-                    ? validSeedphrase.error?.message
-                    : '', // Return validation error
+                        ? validSeedphrase.error?.message
+                        : '', // Return validation error
             } as IClientResponse;
         }
     }
@@ -439,55 +758,6 @@ export class Wallet {
     }
 
     /**
-     * Sign a given message with an array of key-pairs
-     *
-     * @param {IKeypairEncrypted[]} keyPairsToSignWith - Key-pairs to use in the signing process
-     * @param {string} message - The message to sign
-     * @return {*}  {Promise<IClientResponse>}
-     * @memberof Wallet
-     */
-    signMessage(keyPairsToSignWith: IKeypairEncrypted[], message: string): IClientResponse {
-        try {
-            if (this.keyMgmt === undefined) throw new Error(IErrorInternal.ClientNotInitialized);
-            const keyPairs = throwIfErr(this.keyMgmt.decryptKeypairs(keyPairsToSignWith));
-            const signatures = throwIfErr(this.keyMgmt.signMessage(keyPairs, message));
-            return {
-                status: 'success',
-                reason: ISuccessInternal.MessageSigned,
-                content: {
-                    signMessageResponse: signatures,
-                },
-            } as IClientResponse;
-        } catch (error) {
-            return {
-                status: 'error',
-                reason: `${error}`,
-            } as IClientResponse;
-        }
-    }
-
-    verifyMessage(
-        message: string,
-        signatures: IGenericKeyPair<string>,
-        keyPairs: IKeypairEncrypted[],
-    ): IClientResponse {
-        try {
-            if (this.keyMgmt === undefined) throw new Error(IErrorInternal.ClientNotInitialized);
-            const keyPairsUnencrypted = throwIfErr(this.keyMgmt.decryptKeypairs(keyPairs));
-            throwIfErr(this.keyMgmt.verifyMessage(message, signatures, keyPairsUnencrypted));
-            return {
-                status: 'success',
-                reason: ISuccessInternal.MessageVirified,
-            } as IClientResponse;
-        } catch (error) {
-            return {
-                status: 'error',
-                reason: `${error}`,
-            } as IClientResponse;
-        }
-    }
-
-    /**
      * Make a payment of a specified token amount to a payment address
      *
      * @param {string} paymentAddress - Address to make the payment to
@@ -530,318 +800,6 @@ export class Wallet {
             Item: { amount: paymentAmount, genesis_hash: genesisHash, metadata },
         });
         return this.makePayment(paymentAddress, paymentAsset, allKeypairs, excessKeypair);
-    }
-
-    /**
-     * Make a item-based payment to a specified address
-     *
-     * @param {string} paymentAddress - Address to make the payment to
-     * @param {(IAssetItem | IAssetToken)} sendingAsset - The asset to pay
-     * @param {(IAssetItem | IAssetToken)} receivingAsset - The asset to receive
-     * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
-     * @param {IKeypairEncrypted} receiveAddress - A key-pair to assign the "receiving" asset to
-     * @return {*}  {Promise<IClientResponse>}
-     * @memberof Wallet
-     */
-    public async make2WayPayment(
-        paymentAddress: string,
-        sendingAsset: IAssetItem | IAssetToken,
-        receivingAsset: IAssetItem | IAssetToken,
-        allKeypairs: IKeypairEncrypted[],
-        receiveAddress: IKeypairEncrypted,
-    ): Promise<IClientResponse> {
-        try {
-            if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
-                throw new Error(IErrorInternal.ClientNotInitialized);
-            if (!this.valenceHost) throw new Error(IErrorInternal.ValenceNotInitialized);
-            const senderKeypair = throwIfErr(this.keyMgmt.decryptKeypair(receiveAddress));
-            const [allAddresses, keyPairMap] = throwIfErr(
-                this.keyMgmt.getAllAddressesAndKeypairMap(allKeypairs),
-            );
-
-            // Update balance
-            const balance = await this.fetchBalance(allAddresses);
-            if (balance.status !== 'success' || !balance.content?.fetchBalanceResponse)
-                throw new Error(balance.reason);
-
-            if (allAddresses.length === 0) throw new Error(IErrorInternal.NoKeypairsProvided);
-
-            // Generate a DRUID value for this transaction
-            const druid = throwIfErr(this.keyMgmt.getNewDRUID());
-
-            const senderExpectation: IDruidExpectation = {
-                from: '', // This field needs to be calculated by the other party and populated by us upon acceptance
-                to: senderKeypair.address,
-                asset: receivingAsset,
-            };
-
-            const receiverExpectation: IDruidExpectation = {
-                from: '', // This is calculated by us after the transaction is created and then sent to the valence server
-                to: paymentAddress,
-                asset: sendingAsset,
-            };
-
-            // Create "sender" half transaction with some missing data in DruidExpectations objects (`from`)
-            const sendIbTxHalf = throwIfErr(
-                createIbTxHalf(
-                    balance.content.fetchBalanceResponse,
-                    druid,
-                    senderExpectation,
-                    receiverExpectation,
-                    senderKeypair.address,
-                    keyPairMap,
-                ),
-            );
-
-            // Create transaction struct has successfully been created
-            // now we encrypt the created transaction for storage
-            const encryptedTx = throwIfErr(this.keyMgmt.encryptTransaction(sendIbTxHalf.createTx));
-
-            // Create "sender" details and expectations for valence server
-            receiverExpectation.from = throwIfErr(
-                constructTxInsAddress(sendIbTxHalf.createTx.inputs),
-            );
-            if (sendIbTxHalf.createTx.druid_info === null)
-                throw new Error(IErrorInternal.NoDRUIDValues);
-
-            // Generate the values to be placed on the valence server for the receiving party
-            const valuePayload: IPendingIbTxDetails = {
-                druid,
-                senderExpectation,
-                receiverExpectation,
-                status: 'pending', // Status of the 2 way transaction
-                mempoolHost: this.mempoolHost,
-            };
-            const sendBody = [
-                generateValenceSetBody(
-                    paymentAddress,
-                    senderKeypair.address,
-                    senderKeypair,
-                    valuePayload,
-                ),
-            ];
-
-            // Send the transaction details to the valence server for the receiving party to inspect
-            return await axios
-                .post(`${this.valenceHost}${IAPIRoute.ValenceSet}`, sendBody)
-                .then(() => {
-                    // Payment now getting processed
-                    return {
-                        status: 'success',
-                        reason: ISuccessInternal.IbPaymentProcessing,
-                        content: {
-                            make2WayPaymentResponse: {
-                                druid,
-                                encryptedTx: encryptedTx,
-                            },
-                        },
-                    } as IClientResponse;
-                })
-                .catch(async (error) => {
-                    if (error instanceof Error) throw new Error(error.message);
-                    else throw new Error(`${error}`);
-                });
-        } catch (error) {
-            return {
-                status: 'error',
-                reason: `${error}`,
-            } as IClientResponse;
-        }
-    }
-
-    /**
-     * Accept a item-based payment
-     *
-     * @param {string} druid - Unique DRUID value associated with a item-based payment
-     * @param {IResponseValence<IPendingIbTxDetails>} pendingResponse - 2-Way transaction(s) information as received from the valence server
-     * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
-     * @return {*}  {Promise<IClientResponse>}
-     * @memberof Wallet
-     */
-    public async accept2WayPayment(
-        druid: string,
-        pendingResponse: IResponseValence<IPendingIbTxDetails>,
-        allKeypairs: IKeypairEncrypted[],
-    ): Promise<IClientResponse> {
-        return this.handleIbTxResponse(druid, pendingResponse, 'accepted', allKeypairs);
-    }
-
-    /**
-     * Reject a item-based payment
-     *
-     * @param {string} druid - Unique DRUID value associated with a item-based payment
-     * @param {IResponseValence<IPendingIbTxDetails>} pendingResponse - 2-Way transaction(s) information as received from the valence server
-     * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
-     * @return {*}  {Promise<IClientResponse>}
-     * @memberof Wallet
-     */
-
-    public async reject2WayPayment(
-        druid: string,
-        pendingResponse: IResponseValence<IPendingIbTxDetails>,
-        allKeypairs: IKeypairEncrypted[],
-    ): Promise<IClientResponse> {
-        return this.handleIbTxResponse(druid, pendingResponse, 'rejected', allKeypairs);
-    }
-
-    /**
-     * Fetch pending item-based payments from the valence server
-     *
-     * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
-     * @param {ICreateTransactionEncrypted[]} allEncryptedTxs - A list of all existing saved transactions (encrypted)
-     * @return {*}  {Promise<IClientResponse>}
-     * @memberof Wallet
-     */
-    public async fetchPending2WayPayments(
-        allKeypairs: IKeypairEncrypted[],
-        allEncryptedTxs: ICreateTransactionEncrypted[],
-    ): Promise<IClientResponse> {
-        try {
-            if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
-                throw new Error(IErrorInternal.ClientNotInitialized);
-            if (!this.valenceHost) throw new Error(IErrorInternal.ValenceNotInitialized);
-
-            // Generate a key-pair map
-            const [allAddresses, keyPairMap] = throwIfErr(
-                this.keyMgmt.getAllAddressesAndKeypairMap(allKeypairs),
-            );
-
-            // DRUID - Encrypted Transaction Mapping
-            const encryptedTxMap = new Map<string, ICreateTransactionEncrypted>();
-            allEncryptedTxs.forEach((tx) => encryptedTxMap.set(tx.druid, tx));
-
-            const pendingValence: IRequestValenceGetBody[] = allAddresses
-                .map((address) => {
-                    if (!this.keyMgmt) return null;
-                    const keyPair = keyPairMap.get(address);
-                    if (!keyPair) return null;
-                    return generateValenceGetBody(address, keyPair);
-                })
-                .filter((input): input is IRequestValenceGetBody => !!input); /* Filter array */
-
-            // Get all pending RB transactions
-            let responseData = await axios
-                .post<IResponseValence<IPendingIbTxDetails>>(
-                    `${this.valenceHost}${IAPIRoute.ValenceGet}`,
-                    pendingValence,
-                )
-                .then((response) => {
-                    return response.data;
-                })
-                .catch(async (error) => {
-                    if (error instanceof Error) throw new Error(error.message);
-                    else throw new Error(`${error}`);
-                });
-
-            // NB: Validate item-based data and remove garbage entries
-            responseData = filterValidValenceData(responseData);
-
-            // Get accepted and rejected item-based transactions
-            const rbDataToDelete: IRequestValenceDelBody[] = [];
-            const [acceptedIbTxs, rejectedIbTxs] = [
-                throwIfErr(
-                    filterValenceDataForPredicates(responseData, { status: 'accepted' }, true),
-                ),
-                throwIfErr(
-                    filterValenceDataForPredicates(responseData, { status: 'rejected' }, true),
-                ),
-            ];
-
-            // We have accepted item-based payments to send to mempool
-            if (Object.entries(acceptedIbTxs).length > 0) {
-                const transactionsToSend: ICreateTransaction[] = [];
-                for (const acceptedTx of Object.values(acceptedIbTxs)) {
-                    // Decrypt transaction stored along with DRUID value
-                    const encryptedTx = encryptedTxMap.get(acceptedTx.value.druid);
-                    if (!encryptedTx) throw new Error(IErrorInternal.InvalidDRUIDProvided);
-                    const decryptedTransaction = throwIfErr(
-                        this.keyMgmt.decryptTransaction(encryptedTx),
-                    );
-
-                    // Ensure this transaction is actually a 2 way transaction
-                    if (!decryptedTransaction.druid_info)
-                        throw new Error(IErrorInternal.NoDRUIDValues);
-
-                    // Set `from` address value from recipient by setting the entire expectation to the one received from the valence server
-                    decryptedTransaction.druid_info.expectations[0] =
-                        acceptedTx.value.senderExpectation; /* There should be only one expectation in a item-based payment */
-
-                    // Add to list of transactions to send to mempool node
-                    transactionsToSend.push(decryptedTransaction);
-                    const keyPair = keyPairMap.get(acceptedTx.value.senderExpectation.to);
-                    if (!keyPair) throw new Error(IErrorInternal.UnableToGetKeypair);
-
-                    rbDataToDelete.push(
-                        generateValenceDelBody(
-                            acceptedTx.value.senderExpectation.to,
-                            acceptedTx.value.receiverExpectation.to,
-                            keyPair,
-                        ),
-                    );
-                }
-
-                // Generate the required headers
-                const headers = this.getRequestIdAndNonceHeadersForRoute(
-                    this.mempoolRoutesPoW,
-                    IAPIRoute.CreateTransactions,
-                );
-
-                // Send transactions to mempool for processing
-                await axios
-                    .post<INetworkResponse>(
-                        // NB: Make sure we use the same mempool host when initializing all item-based payments
-                        `${this.mempoolHost}${IAPIRoute.CreateTransactions}`,
-                        transactionsToSend,
-                        { ...headers, validateStatus: () => true },
-                    )
-                    .then(async (response) => {
-                        if (castAPIStatus(response.data.status) === 'error')
-                            throw new Error(response.data.reason);
-                    })
-                    .catch(async (error) => {
-                        if (error instanceof Error) throw new Error(error.message);
-                        else throw new Error(`${error}`);
-                    });
-            }
-
-            // Add rejected item-based transactions to delete list as well
-            if (Object.entries(rejectedIbTxs).length > 0) {
-                for (const rejectedTx of Object.values(rejectedIbTxs)) {
-                    const keyPair = keyPairMap.get(rejectedTx.value.senderExpectation.to);
-                    if (!keyPair) throw new Error(IErrorInternal.UnableToGetKeypair);
-
-                    rbDataToDelete.push(
-                        generateValenceDelBody(
-                            rejectedTx.value.senderExpectation.to,
-                            rejectedTx.value.receiverExpectation.to,
-                            keyPair,
-                        ),
-                    );
-                }
-            }
-
-            // Delete item-based data from valence since the information is no longer relevant (accepted and rejected txs)
-            if (rbDataToDelete.length > 0)
-                await axios
-                    .post(`${this.valenceHost}${IAPIRoute.ValenceDel}`, rbDataToDelete)
-                    .catch(async (error) => {
-                        if (error instanceof Error) throw new Error(error.message);
-                        else throw new Error(`${error}`);
-                    });
-
-            return {
-                status: 'success',
-                reason: ISuccessInternal.PendingIbPaymentsFetched,
-                content: {
-                    fetchPendingIbResponse: responseData,
-                },
-            } as IClientResponse;
-        } catch (error) {
-            return {
-                status: 'error',
-                reason: `${error}`,
-            } as IClientResponse;
-        }
     }
 
     /**
@@ -1039,6 +997,55 @@ export class Wallet {
         }
     }
 
+    /**
+   * Sign a given message with an array of key-pairs
+   *
+   * @param {IKeypairEncrypted[]} keyPairsToSignWith - Key-pairs to use in the signing process
+   * @param {string} message - The message to sign
+   * @return {*}  {Promise<IClientResponse>}
+   * @memberof Wallet
+   */
+    signMessage(keyPairsToSignWith: IKeypairEncrypted[], message: string): IClientResponse {
+        try {
+            if (this.keyMgmt === undefined) throw new Error(IErrorInternal.ClientNotInitialized);
+            const keyPairs = throwIfErr(this.keyMgmt.decryptKeypairs(keyPairsToSignWith));
+            const signatures = throwIfErr(this.keyMgmt.signMessage(keyPairs, message));
+            return {
+                status: 'success',
+                reason: ISuccessInternal.MessageSigned,
+                content: {
+                    signMessageResponse: signatures,
+                },
+            } as IClientResponse;
+        } catch (error) {
+            return {
+                status: 'error',
+                reason: `${error}`,
+            } as IClientResponse;
+        }
+    }
+
+    verifyMessage(
+        message: string,
+        signatures: IGenericKeyPair<string>,
+        keyPairs: IKeypairEncrypted[],
+    ): IClientResponse {
+        try {
+            if (this.keyMgmt === undefined) throw new Error(IErrorInternal.ClientNotInitialized);
+            const keyPairsUnencrypted = throwIfErr(this.keyMgmt.decryptKeypairs(keyPairs));
+            throwIfErr(this.keyMgmt.verifyMessage(message, signatures, keyPairsUnencrypted));
+            return {
+                status: 'success',
+                reason: ISuccessInternal.MessageVirified,
+            } as IClientResponse;
+        } catch (error) {
+            return {
+                status: 'error',
+                reason: `${error}`,
+            } as IClientResponse;
+        }
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                                    Utils                                   */
     /* -------------------------------------------------------------------------- */
@@ -1086,9 +1093,6 @@ export class Wallet {
                 ),
             );
 
-            console.log('paymentBody', paymentBody.createTx);
-            console.log('paymentBody', JSON.stringify(paymentBody.createTx));
-
             const { usedAddresses } = paymentBody;
 
             // Generate the needed headers
@@ -1098,7 +1102,6 @@ export class Wallet {
             );
 
             // Send transaction to mempool for processing
-            console.log('Hi');
             return await axios
                 .post<INetworkResponse>(
                     `${this.mempoolHost}${IAPIRoute.CreateTransactions}`,
@@ -1137,137 +1140,13 @@ export class Wallet {
     }
 
     /**
-     * Handle a item-based payment by either accepting or rejecting the payment
-     *
-     * @private
-     * @param {string} druid - Unique DRUID value associated with this payment
-     * @param {IResponseValence<IPendingIbTxDetails>} pendingResponse - Pending item-based payments response as received from the valence server
-     * @param {('accepted' | 'rejected')} status - Status to se the payment to
-     * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
-     * @return {*}  {Promise<IClientResponse>}
-     * @memberof Wallet
-     */
-    private async handleIbTxResponse(
-        druid: string,
-        pendingResponse: IResponseValence<IPendingIbTxDetails>,
-        status: 'accepted' | 'rejected',
-        allKeypairs: IKeypairEncrypted[],
-    ): Promise<IClientResponse> {
-        try {
-            if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
-                throw new Error(IErrorInternal.ClientNotInitialized);
-            if (!this.valenceHost) throw new Error(IErrorInternal.ValenceNotInitialized);
-            const [allAddresses, keyPairMap] = throwIfErr(
-                this.keyMgmt.getAllAddressesAndKeypairMap(allKeypairs),
-            );
-
-            // Update balance
-            const balance = await this.fetchBalance(allAddresses);
-            if (balance.status !== 'success' || !balance.content?.fetchBalanceResponse)
-                throw new Error(balance.reason);
-
-            // Find specified DRUID value and entry that is still marked as 'pending'
-            const rbDataForDruid = throwIfErr(
-                filterValenceDataForPredicates<IPendingIbTxDetails>(pendingResponse, {
-                    druid: druid /* Filter for specific DRUID value */,
-                    status: 'pending' /* Filter for status which is still 'pending' */,
-                }),
-            );
-
-            // We assume that the filtered data should contain a single key-value pair since DRUID values are unique
-            const rawTxInfo = throwIfErr(formatSingleCustomKeyValuePair(rbDataForDruid)).value
-                .value;
-            const txInfo = throwIfErr(formatAssetStructures(rawTxInfo));
-
-            // Get the key-pair assigned to this receiver address
-            const receiverKeypair = keyPairMap.get(txInfo.receiverExpectation.to);
-            if (!receiverKeypair) throw new Error(IErrorInternal.UnableToGetKeypair);
-
-            // Set the status of the pending request
-            txInfo.status = status;
-
-            // Handle case for 'accepted'; create and send transaction to mempool node
-            if (status === 'accepted') {
-                const sendIbTxHalf = throwIfErr(
-                    // Sender expectation and receiver expectation context is switched
-                    // in comparison to `make2WayPayment` since we are the receiving party
-                    createIbTxHalf(
-                        balance.content.fetchBalanceResponse,
-                        druid,
-                        txInfo.receiverExpectation, // What we expect from the other party
-                        txInfo.senderExpectation, // What the other party can expect from us
-                        receiverKeypair.address,
-                        keyPairMap,
-                    ),
-                );
-
-                // Construct our 'from` address using our transaction inputs
-                txInfo.senderExpectation.from = throwIfErr(
-                    constructTxInsAddress(sendIbTxHalf.createTx.inputs),
-                );
-
-                // Generate the required headers
-                const headers = this.getRequestIdAndNonceHeadersForRoute(
-                    this.mempoolRoutesPoW,
-                    IAPIRoute.CreateTransactions,
-                );
-
-                // Send transaction to mempool to be added to the current DRUID pool
-                await axios
-                    .post<INetworkResponse>(
-                        // We send this transaction to the mempool node specified by the sending party
-                        `${txInfo.mempoolHost}${IAPIRoute.CreateTransactions}`,
-                        [sendIbTxHalf.createTx],
-                        { ...headers, validateStatus: () => true },
-                    )
-                    .then((response) => {
-                        if (castAPIStatus(response.data.status) !== 'success')
-                            throw new Error(response.data.reason);
-                    })
-                    .catch(async (error) => {
-                        if (error instanceof Error) throw new Error(error.message);
-                        else throw new Error(`${error}`);
-                    });
-            }
-
-            // Send the updated status of the transaction on the valence server
-            const setBody = [
-                generateValenceSetBody<IPendingIbTxDetails>(
-                    txInfo.senderExpectation.to,
-                    txInfo.receiverExpectation.to,
-                    receiverKeypair,
-                    txInfo,
-                ),
-            ];
-
-            // Update the transaction details on the valence server
-            await axios
-                .post(`${this.valenceHost}${IAPIRoute.ValenceSet}`, setBody)
-                .catch(async (error) => {
-                    if (error instanceof Error) throw new Error(error.message);
-                    else throw new Error(`${error}`);
-                });
-
-            return {
-                status: 'success',
-                reason: ISuccessInternal.RespondedToIbPayment,
-            } as IClientResponse;
-        } catch (error) {
-            return {
-                status: 'error',
-                reason: `${error}`,
-            };
-        }
-    }
-
-    /**
-     * Get information regarding the PoW required for all routes
-     *
-     * @private
-     * @param {(string)} host - Host address to retrieve proof-of-work data from
-     * @return {*}  {Promise<IClientResponse>}
-     * @memberof Wallet
-     */
+ * Get information regarding the PoW required for all routes
+ *
+ * @private
+ * @param {(string)} host - Host address to retrieve proof-of-work data from
+ * @return {*}  {Promise<IClientResponse>}
+ * @memberof Wallet
+ */
     private async getDebugData(host: string): Promise<IClientResponse> {
         try {
             const routesPow =
@@ -1334,38 +1213,4 @@ export class Wallet {
             },
         };
     }
-
-    /**
-     * Generate a unique request ID as well as the corresponding
-     * nonce required for a route
-     *
-     * @private
-     * @param {string} route
-     * @return {*}  
-     * 
-     * @memberof Wallet
-     */
-    // private _getValenceHeadersForRoute(
-    //     address: string,
-    //     publicKey: string,
-    //     signature: string,
-    // ): {
-    //     headers: {
-    //         'Content-Type': string;
-    //         'address': string;
-    //         'publicKey': string;
-    //         'signature': string;
-    //     };
-    // } {
-    //     return {
-    //         headers: {
-    //             ...DEFAULT_HEADERS.headers,
-    //             ...{
-    //                 'address': address,
-    //                 'publicKey': publicKey,
-    //                 'signature': signature,
-    //             }
-    //         },
-    //     };
-    // }
 }

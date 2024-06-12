@@ -8,7 +8,7 @@ import {
     IClientResponse,
     ICustomKeyPair,
     IErrorInternal,
-    IPendingIbTxDetails,
+    IPending2WTxDetails,
     IResult,
 } from '../interfaces';
 
@@ -119,7 +119,7 @@ export function truncateByBytesUTF8(chars: string, n: number): string {
         try {
             return fromBytesUTF8(bytes);
             // eslint-disable-next-line no-empty
-        } catch (e) {}
+        } catch (e) { }
         bytes = bytes.substring(0, bytes.length - 1);
     }
 }
@@ -265,6 +265,7 @@ export const formatSingleCustomKeyValuePair = <K extends string | number | symbo
     key: K;
     value: T;
 }> => {
+    console.log('V', v)
     if (Object.entries(v).length !== 1) return err(IErrorInternal.KeyValuePairNotSingle);
     const returnValue = {
         key: Object.keys(v)[0] as K,
@@ -277,12 +278,12 @@ export const formatSingleCustomKeyValuePair = <K extends string | number | symbo
  * Adds sensible defaults to asset structures for receiving and sending in 2 way transactions. Ensures
  * error handling for missing fields.
  *
- * @param {IPendingIbTxDetails} txStructure
+ * @param {IPending2WTxDetails} txStructure
  * @return {*}  {IResult<IPendingIbTxDetails>}
  */
 export const formatAssetStructures = (
-    txStructure: IPendingIbTxDetails,
-): IResult<IPendingIbTxDetails> => {
+    txStructure: IPending2WTxDetails,
+): IResult<IPending2WTxDetails> => {
     const defaults = {
         amount: 0,
         genesis_hash: null,

@@ -80,6 +80,7 @@ export enum IErrorInternal {
     NoKeypairsProvided = 'No key-pairs provided',
     NoPassPhraseProvided = 'No passphrase provided',
     NoComputeHostProvided = 'No compute host provided',
+    NoContentReturned = 'No content returned',
     UnknownError = 'Unknown Error',
 }
 

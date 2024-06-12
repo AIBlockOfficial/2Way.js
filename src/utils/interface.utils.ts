@@ -3,7 +3,7 @@ import {
     IAssetToken,
     IAssetItem,
     IDruidExpectation,
-    IPendingIbTxDetails,
+    IPending2WTxDetails,
     IResult,
     IErrorInternal,
     IApiCreateTxResponse,
@@ -80,13 +80,13 @@ export function initIDruidExpectation(options?: Partial<IDruidExpectation>): IDr
  * Initialize an empty structure of type `IPendingIbTxDetails`, providing optional additional values
  *
  * @export
- * @param {Partial<IPendingIbTxDetails>} [options] - Optional additional values to initialize the structure with
+ * @param {Partial<IPending2WTxDetails>} [options] - Optional additional values to initialize the structure with
  * @return {*}  {IPendingIbTxDetails}
  */
 export function initIPendingIbTxDetails(
-    options?: Partial<IPendingIbTxDetails>,
-): IPendingIbTxDetails {
-    const defaults: IPendingIbTxDetails = {
+    options?: Partial<IPending2WTxDetails>,
+): IPending2WTxDetails {
+    const defaults: IPending2WTxDetails = {
         druid: '',
         senderExpectation: initIDruidExpectation(),
         receiverExpectation: initIDruidExpectation(),
@@ -257,10 +257,11 @@ export const isOfTypeIAssetItem = (value: any): value is IAssetItem =>
  *   Determine whether the provided value is of type `IPendingIbTxDetails`
  *
  * @param {*} value
- * @return {*}  {value is IPendingIbTxDetails}
+ * @return {*}  {value is IPendingIbTxDetails} (: value is IPendingIbTxDetails)
  */
-export const isOfTypeIPendingIbTxDetails = (value: any): value is IPendingIbTxDetails =>
-    isOfType<IPendingIbTxDetails>(value, initIPendingIbTxDetails());
+export const isOfTypeIPendingIbTxDetails = (value: any) => {
+    return isOfType<IPending2WTxDetails>(value, initIPendingIbTxDetails());
+}
 
 /**
  *
@@ -270,10 +271,11 @@ export const isOfTypeIPendingIbTxDetails = (value: any): value is IPendingIbTxDe
  * @param {*} testAgainst
  * @return {*}  {arg is T}
  */
-export const isOfType = <T>(arg: any, testAgainst: any): arg is T =>
-    Object.entries(testAgainst).every(
-        ([key]) => key in arg && typeof arg[key] === typeof testAgainst[key],
+export const isOfType = <T>(arg: any, testAgainst: any): arg is T => {
+    return Object.entries(testAgainst).every(
+        ([key]) => { return key in arg && typeof arg[key] === typeof testAgainst[key] },
     );
+}
 
 /**
  * Determine whether two assets are of type `IAssetToken`

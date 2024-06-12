@@ -2,12 +2,10 @@ import { SEED, MK, CONFIG } from '../constants';
 import { Wallet } from '../../services/wallet.service';
 
 let walletInstance = new Wallet();
-let walletInstance2 = new Wallet();
 
 beforeEach(() => {
     jest.setTimeout(60000);
     walletInstance = new Wallet();
-    walletInstance2 = new Wallet();
 });
 
 test('init wallet validation', async () => {
@@ -45,7 +43,7 @@ test('init wallet without optional config fields', async () => {
         expect(res.reason).toBe('Error: Storage host not initialized');
     });
 
-    await walletInstance.fetchPending2WayPayments([], []).then((res) => {
+    await walletInstance.fetchPending2WayPayment({} as any).then((res) => {
         expect(res.reason).toBe('Error: Valence host not initialized');
     });
 });
@@ -103,6 +101,7 @@ test('fetch balance', async () => {
     expect(kpAddr).toBeDefined();
 
     await walletInstance.fetchBalance([kpAddr!]).then((res) => {
+        console.log('fetchBalance', res);
         expect(res.status).toBe('success');
     });
 });

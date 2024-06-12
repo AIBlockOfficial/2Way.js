@@ -264,9 +264,7 @@ test('generate an valence set body', () => {
     const dataToSet: object = { testValue: 'Hello!' };
     // Generate valence set body
     const body = generateValenceSetBody<object>(
-        'address_to_send_data_to',
         keypair.address,
-        keypair,
         dataToSet,
     );
     // Verify correct body structure

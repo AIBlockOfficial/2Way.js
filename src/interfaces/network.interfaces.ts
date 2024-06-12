@@ -46,9 +46,8 @@ export type IContentType = {
 // Content received from mempool node / valence server API endpoints
 export type IApiContentType = {
     fetchBalanceResponse?: IFetchBalanceResponse;
-    fetchPending2WayResponse?: IFetchPending2WayResponse;
     createItemResponse?: ICreateItemResponse;
-    fetchPendingIbResponse?: IResponseValence<IPendingIbTxDetails>;
+    fetchPending2WResponse?: IPending2WTxDetails;
     debugDataResponse?: IDebugDataResponse;
     fetchTransactionsResponse?: IFetchTransactionsResponse;
     makePaymentResponse?: IMakePaymentResponse;
@@ -81,7 +80,7 @@ export type INetworkResponse = {
     status: 'Success' | 'Error' | 'InProgress' | 'Unknown';
     reason?: string;
     route?: string;
-    content?: IApiContentType;
+    content?: IApiContentType | any;
 };
 
 export type IApiCreateTxResponse = IGenericKeyPair<[string, IApiAsset]>; // Transaction hash - (public key address, asset paid);
@@ -157,20 +156,19 @@ export type ICreateTxPayload = {
 };
 
 /* -------------------------------------------------------------------------- */
-/*                          Valence Interfaces                         */
+/*                          Valence Interfaces                                */
 /* -------------------------------------------------------------------------- */
 
-export type IResponseValence<T> = {
-    // Address that placed the data : IRedisFieldEntry<T>;
-    [key: string]: IRedisFieldEntry<T>;
+export type IRequestValenceResponse = {
+    status: 'Success' | 'Error' | 'InProgress' | 'Unknown';
+    reason?: string;
+    route?: string;
+    content?: IApiContentType;
 };
 
 export type IRequestValenceSetBody<T> = {
-    key: string;
-    field: string;
-    publicKey: string;
-    signature: string;
-    value: T;
+    address: string;
+    data: T;
 };
 
 export type IRequestValenceDelBody = {
@@ -186,13 +184,8 @@ export type IRequestValenceGetBody = {
     signature: string;
 };
 
-export type IRedisFieldEntry<T> = {
-    timestamp: number;
-    value: T;
-};
-
 // NOTE: This data structure can be changed to anything and it will still be supported by the valence server
-export type IPendingIbTxDetails = {
+export type IPending2WTxDetails = {
     druid: string; // Value to bind transactions together
     senderExpectation: IDruidExpectation;
     receiverExpectation: IDruidExpectation;
