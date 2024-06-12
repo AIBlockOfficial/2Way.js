@@ -113,4 +113,8 @@ test('fetch transaction', async () => {
     await walletInstance.fetchTransactions(['000000']).then((res) => {
         expect(res.status).toBe('success');
     });
+
+    await walletInstance.fetchTransactions(['']).then((res) => {
+        expect(res.status).toBe('error');
+    });
 });

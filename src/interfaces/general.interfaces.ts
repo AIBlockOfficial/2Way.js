@@ -1,4 +1,4 @@
-import { HDPrivateKey } from "bitcore-lib";
+import { HDPrivateKey } from 'bitcore-lib';
 
 /* -------------------------------------------------------------------------- */
 /*                       Interfaces for Wallet                       */

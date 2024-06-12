@@ -39,10 +39,11 @@ const byteLength = (length: number) => {
 //================ VALIDATIONS ===================//
 
 export const validateAsset = (value: IAssetItem | IAssetToken) => {
-    if (value.hasOwnProperty("Item")) return validateAssetItem(value as IAssetItem);
-    
+    if (Object.prototype.hasOwnProperty.call(value, 'Item'))
+        return validateAssetItem(value as IAssetItem);
+
     return validateAssetToken(value as IAssetToken);
-}
+};
 
 export const validateAssetItem = (value: IAssetItem) => {
     const assetItemSchema = Joi.object({
@@ -53,19 +54,19 @@ export const validateAssetItem = (value: IAssetItem) => {
         }).required(),
     });
     return assetItemSchema.validate(value);
-}
+};
 
 export const validateAssetToken = (value: IAssetToken) => {
     const assetTokenSchema = Joi.object({
         Token: Joi.number().required(),
     });
     return assetTokenSchema.validate(value);
-}
+};
 
 export const validateMessage = (value: string) => {
     const messageSchema = Joi.string().required();
     return messageSchema.validate(value);
-}
+};
 
 export const validateMetadata = (value: string | null) => {
     return byteLength(METADATA_MAX_LENGTH).validate(value);
