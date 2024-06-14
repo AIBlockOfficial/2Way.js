@@ -327,8 +327,8 @@ export class Wallet {
                     } as IClientResponse;
                 })
                 .catch(async (error) => {
-                    if (error instanceof Error) throw new Error(error.message);
-                    else throw new Error(`${error}`);
+                    console.log(`Error calling /fetch_balance: ${error}`);
+                    throw new Error('Unable to fetch balance from mempool successfully');
                 });
         } catch (error) {
             return {
@@ -376,8 +376,8 @@ export class Wallet {
                     } as IClientResponse;
                 })
                 .catch(async (error) => {
-                    if (error instanceof Error) throw new Error(error.message);
-                    else throw new Error(`${error}`);
+                    console.log(`Error calling /blockchain_entry: ${error}`);
+                    throw new Error('Unable to fetch blockchain entry from storage successfully');
                 });
         } catch (error) {
             return {
@@ -443,8 +443,8 @@ export class Wallet {
                     } as IClientResponse;
                 })
                 .catch(async (error) => {
-                    if (error instanceof Error) throw new Error(error.message);
-                    else throw new Error(`${error}`);
+                    console.log(`Error calling /create_item_asset: ${error}`);
+                    throw new Error('Unable to create Item asset on mempool successfully');
                 });
         } catch (error) {
             return {
@@ -739,8 +739,8 @@ export class Wallet {
                     } as IClientResponse;
                 })
                 .catch(async (error) => {
-                    if (error instanceof Error) throw new Error(error.message);
-                    else throw new Error(`${error}`);
+                    console.log(`Error calling /set_data on L2: ${error}`);
+                    throw new Error('Unable to set data on L2 successfully');
                 });
         } catch (error) {
             return {
@@ -859,8 +859,8 @@ export class Wallet {
                     return response.data;
                 })
                 .catch(async (error) => {
-                    if (error instanceof Error) throw new Error(error.message);
-                    else throw new Error(`${error}`);
+                    console.log(`Error calling /get_data on L2: ${error}`);
+                    throw new Error('Unable to get data from L2 successfully');
                 });
 
             // NB: Validate item-based data and remove garbage entries
@@ -929,8 +929,8 @@ export class Wallet {
                             throw new Error(response.data.reason);
                     })
                     .catch(async (error) => {
-                        if (error instanceof Error) throw new Error(error.message);
-                        else throw new Error(`${error}`);
+                        console.log(`Error calling /create_transactions: ${error}`);
+                        throw new Error('Unable to create transactions on mempool successfully');
                     });
             }
 
@@ -955,8 +955,8 @@ export class Wallet {
                 await axios
                     .post(`${this.intercomHost}${IAPIRoute.IntercomDel}`, rbDataToDelete)
                     .catch(async (error) => {
-                        if (error instanceof Error) throw new Error(error.message);
-                        else throw new Error(`${error}`);
+                        console.log(`Error calling /delete_data: ${error}`);
+                        throw new Error('Unable to delete data on L2 successfully');
                     });
 
             return {
@@ -1293,13 +1293,9 @@ export class Wallet {
                     } as IClientResponse;
                 })
                 .catch(async (error) => {
-                    if (error instanceof Error) throw new Error(error.message);
-                    else throw new Error(`${error}`);
+                    console.log(`Error calling /create_transactions: ${error}`);
+                    throw new Error('Unable to create transactions on mempool successfully');
                 });
-            // return {
-            //     status: 'success',
-            //     reason: 'Payment made',
-            // } as IClientResponse;
         } catch (error) {
             return {
                 status: 'error',
@@ -1408,8 +1404,8 @@ export class Wallet {
                             throw new Error(response.data.reason);
                     })
                     .catch(async (error) => {
-                        if (error instanceof Error) throw new Error(error.message);
-                        else throw new Error(`${error}`);
+                        console.log(`Error calling /create_transactions: ${error}`);
+                        throw new Error('Unable to create transactions on mempool successfully');
                     });
             }
 
@@ -1427,8 +1423,8 @@ export class Wallet {
             await axios
                 .post(`${this.intercomHost}${IAPIRoute.IntercomSet}`, setBody)
                 .catch(async (error) => {
-                    if (error instanceof Error) throw new Error(error.message);
-                    else throw new Error(`${error}`);
+                    console.log(`Error calling /set_data on L2: ${error}`);
+                    throw new Error('Unable to set data on L2 successfully');
                 });
 
             return {
@@ -1468,8 +1464,8 @@ export class Wallet {
                     } as IClientResponse;
                 })
                 .catch(async (error) => {
-                    if (error instanceof Error) throw new Error(error.message);
-                    else throw new Error(`${error}`);
+                    console.log(`Error calling /debug_data: ${error}`);
+                    throw new Error('Unable to fetch debug data from mempool successfully');
                 });
         } catch (error) {
             return {
