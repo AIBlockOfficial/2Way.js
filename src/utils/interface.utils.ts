@@ -336,7 +336,6 @@ export const transformCreateTxResponseFromNetwork = (
     networkResponse: IApiCreateTxResponse,
 ): IResult<IMakePaymentResponse> => {
     try {
-        console.log('networkResponse', JSON.stringify(networkResponse));
         const transactionHash = Object.keys(networkResponse).pop();
         if (transactionHash === undefined) return err(IErrorInternal.InvalidNetworkResponse);
         const [paymentAddress, asset] = [

@@ -99,6 +99,7 @@ export class Wallet {
 
         this.keyMgmt = new mgmtClient();
         const initIResult = this.keyMgmt.initNew(config.passphrase);
+
         if (!initOffline) {
             const initNetworkIResult = await this.initNetwork(config);
             if (initNetworkIResult.status === 'error') {

@@ -73,7 +73,7 @@ export const validateMetadata = (value: string | null) => {
 };
 
 export const validateTransactionHash = (hash: string) => {
-    const hashSchema = Joi.string().pattern(new RegExp('^g[a-f0-9]{31}$'));
+    const hashSchema = Joi.string().pattern(new RegExp('(^g[a-f0-9]{31}$)|(^(000000)$)'));
     return hashSchema.validate(hash);
 };
 
