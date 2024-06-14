@@ -1,4 +1,5 @@
 import { sha3_256 } from 'js-sha3';
+import { Buffer } from 'buffer';
 import { err, ok } from 'neverthrow';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -11,6 +12,17 @@ import {
     IPendingIbTxDetails,
     IResult,
 } from '../interfaces';
+
+type TypedArray =
+    | Int8Array
+    | Uint8Array
+    | Uint8ClampedArray
+    | Int16Array
+    | Uint16Array
+    | Int32Array
+    | Uint32Array
+    | Float32Array
+    | Float64Array;
 
 /**
  * Cast `status` received from 2 Way network to lowercase string variant
@@ -136,8 +148,8 @@ export function typedArrayToBuffer(array: Uint8Array): ArrayBuffer {
  * @returns
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function concatTypedArrays(a: any, b: any) {
-    const c = new a.constructor(a.length + b.length);
+export function concatTypedArrays<T extends TypedArray>(a: T, b: T): T {
+    const c = new (a.constructor as { new (length: number): T })(a.length + b.length);
     c.set(a, 0);
     c.set(b, a.length);
     return c;

@@ -17,7 +17,7 @@
     "check:types": "tsc --noemit",
     "es:lint": "eslint src --ext .js,.ts",
     "es:lint:fix": "eslint src --fix --ext .js,.ts",
-    "test": "jest --no-cache --config jest.config.js",
+    "test": "jest --no-cache --config jest.config.js --forceExit",
     "test-service": "jest --no-cache --config jest.config.js ./tests/__tests__/wallet.service.test.ts",
     "test-item": "jest --no-cache --config jest.config.js ./tests/__tests__/item.mgmt.test.ts",
     "test-key": "jest --no-cache --config jest.config.js ./tests/__tests__/key.mgmt.test.ts",
