@@ -66,11 +66,11 @@ export function createItemPayload(
 }
 
 /**
- * Create one "half" of a item-based payment
+ * Create one "half" of a 2 way payment
  *
  * @export
  * @param {IFetchBalanceResponse} fetchBalanceResponse - Balance as received from the mempool node
- * @param {string} druid - Unique DRUID value associated with this transaction; needs to match the other "half" of this item-based payment
+ * @param {string} druid - Unique DRUID value associated with this transaction; needs to match the other "half" of this 2 way payment
  * @param {IDruidExpectation} senderExpectation - Expectation for the sender of this transaction
  * @param {IDruidExpectation} receiverExpectation - Expectation for the receiver of this transaction
  * @param {string} excessAddress - Address to send excess funds to (owned by sender of this "half" of the transaction)
@@ -94,7 +94,7 @@ export function create2WTxHalf(
     // Construct DRUID info
     const druidInfo: IDruidValues = {
         druid,
-        participants: 2 /* This is a item-based payment, hence two participants */,
+        participants: 2 /* This is a 2 way payment, hence two participants */,
         expectations: [senderExpectation],
     };
 

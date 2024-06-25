@@ -31,7 +31,7 @@ export type IContentType = {
     newDRUIDResponse?: string;
     newSeedPhraseResponse?: string;
     getSeedPhraseResponse?: string;
-    make2WayPaymentResponse?: IMakeIbPaymentResponse;
+    make2WayPaymentResponse?: IMake2WPaymentResponse;
     newKeypairResponse?: IKeypairEncrypted;
     getMasterKeyResponse?: IMasterKeyEncrypted;
     initNewResponse?: INewWalletResponse;
@@ -47,7 +47,7 @@ export type IContentType = {
 export type IApiContentType = {
     fetchBalanceResponse?: IFetchBalanceResponse;
     createItemResponse?: ICreateItemResponse;
-    fetchPending2WResponse?: IPending2WTxDetails;
+    fetchPending2WResponse?: IPending2WTxDetails[];
     debugDataResponse?: IDebugDataResponse;
     fetchTransactionsResponse?: IFetchTransactionsResponse;
     makePaymentResponse?: IMakePaymentResponse;
@@ -65,7 +65,6 @@ export enum IAPIRoute {
     /* ----------------------------- Valence Routes ---------------------------- */
     ValenceSet = '/set_data',
     ValenceGet = '/get_data',
-    ValenceDel = '/del_data',
 }
 
 /* -------------------------------------------------------------------------- */
@@ -80,7 +79,7 @@ export type INetworkResponse = {
     status: 'Success' | 'Error' | 'InProgress' | 'Unknown';
     reason?: string;
     route?: string;
-    content?: IApiContentType | any;
+    content?: IApiContentType;
 };
 
 export type IApiCreateTxResponse = IGenericKeyPair<[string, IApiAsset]>; // Transaction hash - (public key address, asset paid);
@@ -171,19 +170,6 @@ export type IRequestValenceSetBody<T> = {
     data: T;
 };
 
-export type IRequestValenceDelBody = {
-    key: string;
-    field: string;
-    publicKey: string;
-    signature: string;
-};
-
-export type IRequestValenceGetBody = {
-    key: string;
-    publicKey: string;
-    signature: string;
-};
-
 // NOTE: This data structure can be changed to anything and it will still be supported by the valence server
 export type IPending2WTxDetails = {
     druid: string; // Value to bind transactions together
@@ -196,8 +182,8 @@ export type IPending2WTxDetails = {
 /* -------------------------------------------------------------------------- */
 /*                     Wallet Response Interfaces                    */
 /* -------------------------------------------------------------------------- */
-// Make item-based payment response
-export type IMakeIbPaymentResponse = {
+// Make 2 way payment response
+type IMake2WPaymentResponse = {
     druid: string;
     encryptedTx: ICreateTransactionEncrypted;
 };

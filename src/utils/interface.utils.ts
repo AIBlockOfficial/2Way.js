@@ -77,13 +77,13 @@ export function initIDruidExpectation(options?: Partial<IDruidExpectation>): IDr
 }
 
 /**
- * Initialize an empty structure of type `IPendingIbTxDetails`, providing optional additional values
+ * Initialize an empty structure of type `IPending2WTxDetails`, providing optional additional values
  *
  * @export
  * @param {Partial<IPending2WTxDetails>} [options] - Optional additional values to initialize the structure with
- * @return {*}  {IPendingIbTxDetails}
+ * @return {*}  {IPending2WTxDetails}
  */
-export function initIPendingIbTxDetails(
+export function initIPending2WTxDetails(
     options?: Partial<IPending2WTxDetails>,
 ): IPending2WTxDetails {
     const defaults: IPending2WTxDetails = {
@@ -254,13 +254,13 @@ export const isOfTypeIAssetItem = (value: any): value is IAssetItem =>
     isOfType<IAssetItem>(value, initIAssetItem());
 
 /**
- *   Determine whether the provided value is of type `IPendingIbTxDetails`
+ *   Determine whether the provided value is of type `IPending2WTxDetails`
  *
  * @param {*} value
- * @return {*}  {value is IPendingIbTxDetails} (: value is IPendingIbTxDetails)
+ * @return {*}  {value is IPending2WTxDetails} (: value is IPending2WTxDetails)
  */
-export const isOfTypeIPendingIbTxDetails = (value: any) => {
-    return isOfType<IPending2WTxDetails>(value, initIPendingIbTxDetails());
+export const isOfTypeIPending2WTxDetails = (value: any) => {
+    return isOfType<IPending2WTxDetails>(value, initIPending2WTxDetails());
 }
 
 /**

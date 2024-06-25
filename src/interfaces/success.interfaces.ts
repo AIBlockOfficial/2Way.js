@@ -28,7 +28,7 @@ export enum ISuccessInternal {
     MessageSigned = 'Successfully signed message',
     MessageVirified = 'Successfully verified message',
     TwoWayPaymentProcessing = '2-Way payment processing',
-    Pending2WPaymentsFetched = 'Succesfully fetched pending item-based transactions',
+    Pending2WPaymentsFetched = 'Succesfully fetched pending 2 way transactions',
     AddressesReconstructed = 'Addresses have successfully been reconstructed',
     NewAddressGenerated = 'Successfully generated new address',
     SeedPhraseObtained = 'Successfully obtained seed phrase',
@@ -36,5 +36,5 @@ export enum ISuccessInternal {
     KeypairDecrypted = 'Successfully decrypted key-pair',
     KeypairSaved = 'Successfully saved key-pair to local storage',
     KeypairObtained = 'Successfully retreived key-pair from local storage',
-    RespondedTo2WPayment = 'Successfully responded to item-based payment',
+    RespondedTo2WPayment = 'Successfully responded to 2 way payment',
 }

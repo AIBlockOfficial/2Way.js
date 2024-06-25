@@ -6,7 +6,6 @@ import { BAL_LIMIT } from '../mgmt/constants';
 
 import {
     IClientResponse,
-    ICustomKeyPair,
     IErrorInternal,
     IPending2WTxDetails,
     IResult,
@@ -245,41 +244,11 @@ export function createIdAndNonceHeaders(difficulty?: number): {
 export const getUniqueID = (): string => uuidv4().replace(/-/gi, '').toString().substring(0, 32);
 
 /**
- * Format a `{[key: K]: V}` object into a `{key :K, value: V}` object
- *
- * ### Note
- *
- * This function assumes that the provided parameter only has one key-value pair
- *
- * @template K - key type
- * @template T - value type
- * @param {ICustomKeyPair<K, T>} v
- * @return {*}  {IResult<{
- *     key: K;
- *     value: T;
- * }>}
- */
-export const formatSingleCustomKeyValuePair = <K extends string | number | symbol, T>(
-    v: ICustomKeyPair<K, T>,
-): IResult<{
-    key: K;
-    value: T;
-}> => {
-    console.log('V', v)
-    if (Object.entries(v).length !== 1) return err(IErrorInternal.KeyValuePairNotSingle);
-    const returnValue = {
-        key: Object.keys(v)[0] as K,
-        value: Object.values(v)[0] as T,
-    };
-    return ok(returnValue);
-};
-
-/**
  * Adds sensible defaults to asset structures for receiving and sending in 2 way transactions. Ensures
  * error handling for missing fields.
  *
  * @param {IPending2WTxDetails} txStructure
- * @return {*}  {IResult<IPendingIbTxDetails>}
+ * @return {*}  {IResult<IPending2WTxDetails>}
  */
 export const formatAssetStructures = (
     txStructure: IPending2WTxDetails,
