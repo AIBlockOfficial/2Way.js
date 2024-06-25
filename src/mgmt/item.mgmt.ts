@@ -14,7 +14,7 @@ import {
 import { getStringBytes } from '../utils';
 import { ITEM_DEFAULT } from './constants';
 import { constructAddress, createSignature } from './key.mgmt';
-import { constructTxInSignableAssetHash } from './script.mgmt';
+import { constructTxInSignableAssetHash, updateSignatures } from './script.mgmt';
 import { createTx, getInputsForTx } from './tx.mgmt';
 
 /* -------------------------------------------------------------------------- */
@@ -77,7 +77,7 @@ export function createItemPayload(
  * @param {Map<string, IKeypair>} allKeypairs - Map of all keypairs
  * @return {*}  {IResult<ICreateTxPayload>}
  */
-export function createIbTxHalf(
+export function create2WTxHalf(
     fetchBalanceResponse: IFetchBalanceResponse,
     druid: string,
     senderExpectation: IDruidExpectation,
@@ -98,12 +98,9 @@ export function createIbTxHalf(
         expectations: [senderExpectation],
     };
 
+    const transaction = createTx(receiverExpectation.to, receiverExpectation.asset, excessAddress, druidInfo, txIns.value);
+    if (transaction.isErr()) return err(transaction.error);
+
     // Create the transaction
-    return createTx(
-        receiverExpectation.to,
-        receiverExpectation.asset,
-        excessAddress,
-        druidInfo,
-        txIns.value,
-    );
+    return updateSignatures(transaction.value, fetchBalanceResponse, allKeypairs);
 }
