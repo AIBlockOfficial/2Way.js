@@ -101,7 +101,6 @@ test('fetch balance', async () => {
     expect(kpAddr).toBeDefined();
 
     await walletInstance.fetchBalance([kpAddr!]).then((res) => {
-        console.log('fetchBalance', res);
         expect(res.status).toBe('success');
     });
 });
