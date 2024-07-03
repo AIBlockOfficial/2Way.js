@@ -30,13 +30,12 @@ import {
 import {
     castAPIStatus,
     createIdAndNonceHeaders,
-    generateValenceSetBody,
     initIAssetItem,
     initIAssetToken,
     throwIfErr,
     transformCreateTxResponseFromNetwork,
-    generateVerificationHeaders,
 } from '../utils';
+import { generateValenceSetBody, generateVerificationHeaders } from '../utils/valence.utils';
 import { validateConfig, validateMasterKey, validateSeedphrase } from '../utils/validations.utils';
 import { mgmtClient } from './mgmt.service';
 import { ADDRESS_VERSION } from '../mgmt/constants';
