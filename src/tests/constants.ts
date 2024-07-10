@@ -22,10 +22,10 @@ export type IAddressListTest = {
 // };
 
 export const CONFIG = {
-    mempoolHost: 'http://127.0.0.1:3003',
-    storageHost: 'http://127.0.0.1:3001',
-    valenceHost: 'http://0.0.0.0:3030',
-    passphrase: '',
+    mempoolHost: 'https://mempool.aiblock.dev',
+    storageHost: 'https://storage.aiblock.dev',
+    intercomHost: 'http://0.0.0.0:3030',
+    passphrase: 'test',
 };
 
 export const MK = {

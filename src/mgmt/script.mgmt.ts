@@ -252,7 +252,7 @@ export function p2pkh(
     stackEntries.push(
         new StackEntry(
             'Op',
-            addressVersion == 1 || addressVersion == null ? 'OP_HASH256' : 'OP_HASH256_TEMP',
+            addressVersion === 1 || addressVersion === null ? 'OP_HASH256' : 'OP_HASH256_TEMP',
         ),
     );
     const addr = constructAddress(getHexStringBytes(publicKeyData), addressVersion);

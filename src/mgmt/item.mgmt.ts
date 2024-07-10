@@ -84,6 +84,7 @@ export function create2WTxHalf(
     receiverExpectation: IDruidExpectation,
     excessAddress: string,
     allKeypairs: Map<string, IKeypair>,
+    locktime: number,
 ): IResult<ICreateTxPayload> {
     // Gather `TxIn` values
     const txIns = getInputsForTx(receiverExpectation.asset, fetchBalanceResponse, allKeypairs);
@@ -98,7 +99,7 @@ export function create2WTxHalf(
         expectations: [senderExpectation],
     };
 
-    const transaction = createTx(receiverExpectation.to, receiverExpectation.asset, excessAddress, druidInfo, txIns.value);
+    const transaction = createTx(receiverExpectation.to, receiverExpectation.asset, excessAddress, druidInfo, txIns.value, locktime);
     if (transaction.isErr()) return err(transaction.error);
 
     // Create the transaction
