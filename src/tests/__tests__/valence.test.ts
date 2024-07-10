@@ -1,6 +1,7 @@
 import { CONFIG } from '../constants';
 import { Wallet } from '../../services/wallet.service';
 
+const valueId = 'test';
 let walletInstance = new Wallet();
 let walletInstance2 = new Wallet();
 let seed = '';
@@ -80,7 +81,7 @@ test('set_data', async () => {
         receiveItem, // Receiving asset
         [kp!], // Alice keypairs
         kp!, // Alive kp addr
-        "test"
+        valueId
     ).then((res) => {
         console.log(res)
         expect(res.status).toBe('success');
@@ -109,7 +110,7 @@ test('get_data and accept', async () => {
     console.log('Entry: ', entry);
 
     // Accept
-    await walletInstance.accept2WayPayment(entry.data.druid, entry.data, [kp2!]).then((res) => {
+    await walletInstance.accept2WayPayment(entry.data.druid, entry.data, [kp2!], valueId).then((res) => {
         console.log(res)
         expect(res.status).toBe('success');
     })
