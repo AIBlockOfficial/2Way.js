@@ -47,7 +47,7 @@ export type IContentType = {
 export type IApiContentType = {
     fetchBalanceResponse?: IFetchBalanceResponse;
     createItemResponse?: ICreateItemResponse;
-    fetchPending2WResponse?: IPending2WTxDetails[];
+    fetchPending2WResponse?: IPending2WResponse;
     debugDataResponse?: IDebugDataResponse;
     fetchTransactionsResponse?: IFetchTransactionsResponse;
     makePaymentResponse?: IMakePaymentResponse;
@@ -65,6 +65,7 @@ export enum IAPIRoute {
     /* ----------------------------- Valence Routes ---------------------------- */
     ValenceSet = '/set_data',
     ValenceGet = '/get_data',
+    ValenceDel = '/del_data',
 }
 
 /* -------------------------------------------------------------------------- */
@@ -168,6 +169,11 @@ export type IRequestValenceResponse = {
 export type IRequestValenceSetBody<T> = {
     address: string;
     data: T;
+};
+
+export type IPending2WResponse = {
+    address: string,
+    data: IPending2WTxDetails
 };
 
 // NOTE: This data structure can be changed to anything and it will still be supported by the valence server

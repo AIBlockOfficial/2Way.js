@@ -14,6 +14,7 @@ import {
     IKeypairEncrypted,
     IMasterKeyEncrypted,
     INetworkResponse,
+    IPending2WResponse,
     IPending2WTxDetails,
     IRequestValenceResponse,
     ISuccessInternal,
@@ -68,7 +69,7 @@ export class Wallet {
     /* -------------------------------------------------------------------------- */
 
     /**
-     * 
+     *
      * Initialize a new instance of the client without providing a master key or seed phrase
      *
      * @param {IClientConfig} config - Additional configuration parameters
@@ -717,6 +718,7 @@ export class Wallet {
         receivingAsset: IAssetItem | IAssetToken,
         allKeypairs: IKeypairEncrypted[],
         receiveAddress: IKeypairEncrypted,
+        entryValueId: string,
     ): Promise<IClientResponse> {
         try {
             if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
@@ -781,7 +783,7 @@ export class Wallet {
                 mempoolHost: this.mempoolHost,
             };
 
-            const sendBody = generateValenceSetBody(paymentAddress, valuePayload)
+            const sendBody = generateValenceSetBody(paymentAddress, valuePayload, entryValueId)
             const sendHeaders = generateVerificationHeaders(paymentAddress, senderKeypair)
 
             // Send the transaction details to the valence server for the receiving party to inspect
@@ -852,22 +854,25 @@ export class Wallet {
                 )
                 .then((response) => {
                     if (!response.data.content) throw new Error(IErrorInternal.NoContentReturned);
-                    return response.data.content; // Data returned from the valence server is string and needs to be parsed
+                    return response.data.content;
                 })
                 .catch(async (error) => {
                     if (error instanceof Error) throw new Error(error.message);
                     else throw new Error(`${error}`);
                 });
 
-            // Get accepted and rejected 2 way transactions
-            const accepted2WTxs: IPending2WTxDetails[] = [];
-            const rejected2WTxs: IPending2WTxDetails[] = [];
 
-            (fetched2WTx as IPending2WTxDetails[]).forEach((tx: IPending2WTxDetails) => {
-                if (tx.status === 'accepted') { // temps fix bad content type on valence
-                    accepted2WTxs.push(tx)
-                } else if (tx.status === 'rejected') {
-                    rejected2WTxs.push(tx)
+            // Get accepted and rejected 2 way transactions
+            const accepted2WTxs: { key: string, value: IPending2WTxDetails }[] = [];
+            const rejected2WTxs: { key: string, value: IPending2WTxDetails }[] = [];
+            const twoWayDataToDelete: any[] = [];
+
+
+            Object.entries(fetched2WTx).forEach(([key, value]) => {
+                if ((value as IPending2WResponse).data.status === 'accepted') { // temps fix bad content type on valence
+                    accepted2WTxs.push({ key: key, value: (value as IPending2WResponse).data })
+                } else if ((value as IPending2WResponse).data.status === 'rejected') {
+                    rejected2WTxs.push({ key: key, value: (value as IPending2WResponse).data })
                 }
             });
 
@@ -876,7 +881,7 @@ export class Wallet {
                 const transactionsToSend: ICreateTransaction[] = [];
                 for (const acceptedTx of Object.values(accepted2WTxs)) {
                     // Decrypt transaction stored along with DRUID value
-                    const encryptedTx = encryptedTxMap.get(acceptedTx.druid);
+                    const encryptedTx = encryptedTxMap.get(acceptedTx.value.druid);
                     if (!encryptedTx) throw new Error(IErrorInternal.InvalidDRUIDProvided);
                     const decryptedTransaction = throwIfErr(
                         this.keyMgmt.decryptTransaction(encryptedTx),
@@ -888,20 +893,16 @@ export class Wallet {
 
                     // Set `from` address value from recipient by setting the entire expectation to the one received from the intercom server
                     decryptedTransaction.druid_info.expectations[0] =
-                        acceptedTx.senderExpectation; /* There should be only one expectation in a 2 way payment */
+                        acceptedTx.value.senderExpectation; /* There should be only one expectation in a 2 way payment */
 
                     // Add to list of transactions to send to mempool node
                     transactionsToSend.push(decryptedTransaction);
-                    const keyPair = keyPairMap.get(acceptedTx.senderExpectation.to);
+                    const keyPair = keyPairMap.get(acceptedTx.value.senderExpectation.to);
                     if (!keyPair) throw new Error(IErrorInternal.UnableToGetKeypair);
 
-                    // rbDataToDelete.push(
-                    //     generateIntercomDelBody(
-                    //         acceptedTx.value.senderExpectation.to,
-                    //         acceptedTx.value.receiverExpectation.to,
-                    //         keyPair,
-                    //     ),
-                    // );
+                    twoWayDataToDelete.push(
+                        generateVerificationHeaders(acceptedTx.value.senderExpectation.to, keyPair)
+                    );
                 }
 
                 // Generate the required headers
@@ -926,8 +927,29 @@ export class Wallet {
                         if (error instanceof Error) throw new Error(error.message);
                         else throw new Error(`${error}`);
                     });
-            }
 
+                // Add rejected item-based transactions to delete list as well
+                if (Object.entries(rejected2WTxs).length > 0) {
+                    for (const rejectedTx of Object.values(rejected2WTxs)) {
+                        const keyPair = keyPairMap.get(rejectedTx.value.senderExpectation.to);
+                        if (!keyPair) throw new Error(IErrorInternal.UnableToGetKeypair);
+                        twoWayDataToDelete.push(
+                            generateVerificationHeaders(rejectedTx.value.senderExpectation.to, keyPair)
+                        );
+                    }
+                }
+
+                // Delete item-based data from intercom since the information is no longer relevant (accepted and rejected txs)
+                if (twoWayDataToDelete.length > 0)
+                    for (const dataToDelete of twoWayDataToDelete) {
+                        await axios
+                            .delete(`${this.valenceHost}${IAPIRoute.ValenceDel}`, dataToDelete)
+                            .catch(async (error) => {
+                                if (error instanceof Error) throw new Error(error.message);
+                                else throw new Error(`${error}`);
+                            });
+                    }
+            }
             return {
                 status: 'success',
                 reason: ISuccessInternal.Pending2WPaymentsFetched,
@@ -959,6 +981,7 @@ export class Wallet {
         pendingResponse: IPending2WTxDetails,
         status: 'accepted' | 'rejected',
         allKeypairs: IKeypairEncrypted[],
+        entryValueId: string,
     ): Promise<IClientResponse> {
         try {
             if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
@@ -973,7 +996,7 @@ export class Wallet {
             if (balance.status !== 'success' || !balance.content?.fetchBalanceResponse)
                 throw new Error(balance.reason);
 
-            const txInfo = pendingResponse;
+            const txInfo = (pendingResponse as any);
 
             // Get the key-pair assigned to this receiver address
             const receiverKeypair = keyPairMap.get(txInfo.receiverExpectation.to);
@@ -1027,7 +1050,7 @@ export class Wallet {
             }
 
             // Send the updated status of the transaction on the valence server
-            const sendBody = generateValenceSetBody(txInfo.senderExpectation.to, txInfo)
+            const sendBody = generateValenceSetBody(txInfo.senderExpectation.to, txInfo, entryValueId)
             const sendHeaders = generateVerificationHeaders(txInfo.senderExpectation.to, receiverKeypair)
 
             // Update the transaction details on the valence server
@@ -1065,8 +1088,9 @@ export class Wallet {
         druid: string,
         pendingResponse: IPending2WTxDetails,
         allKeypairs: IKeypairEncrypted[],
+        entryValueId: string,
     ): Promise<IClientResponse> {
-        return this.handle2WTxResponse(druid, pendingResponse, 'accepted', allKeypairs);
+        return this.handle2WTxResponse(druid, pendingResponse, 'accepted', allKeypairs, entryValueId);
     }
 
     /**
@@ -1083,8 +1107,9 @@ export class Wallet {
         druid: string,
         pendingResponse: IPending2WTxDetails,
         allKeypairs: IKeypairEncrypted[],
+        entryValueId: string,
     ): Promise<IClientResponse> {
-        return this.handle2WTxResponse(druid, pendingResponse, 'rejected', allKeypairs);
+        return this.handle2WTxResponse(druid, pendingResponse, 'rejected', allKeypairs, entryValueId);
     }
 
     /* -------------------------------------------------------------------------- */

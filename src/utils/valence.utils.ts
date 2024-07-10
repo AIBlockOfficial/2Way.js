@@ -19,10 +19,12 @@ import { DEFAULT_HEADERS } from '../mgmt';
 export function generateValenceSetBody<T>(
     address: string,
     data: T,
+    dataId: string,
 ): IRequestValenceSetBody<T> {
     return {
         address: address,
         data,
+        "data_id": dataId
     } as IRequestValenceSetBody<T>;
 }
 
