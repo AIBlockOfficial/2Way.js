@@ -67,19 +67,19 @@ export function getInputsForTx(
     const enoughRunningTotal = isOfTypeAssetToken
         ? paymentAsset.Token <= fetchBalanceResponse.total.tokens
         : paymentAsset.Item.amount <=
-          fetchBalanceResponse.total.items[paymentAsset.Item.genesis_hash];
+        fetchBalanceResponse.total.items[paymentAsset.Item.genesis_hash];
 
     if (enoughRunningTotal) {
         // Initialize the total amount gathered; apply DRS transaction hash where required
         let totalAmountGathered: IAssetToken | IAssetItem = isOfTypeAssetToken
             ? initIAssetToken()
             : initIAssetItem({
-                  Item: {
-                      amount: 0,
-                      genesis_hash: paymentAsset.Item.genesis_hash || '',
-                      metadata: paymentAsset.Item.metadata || null,
-                  },
-              });
+                Item: {
+                    amount: 0,
+                    genesis_hash: paymentAsset.Item.genesis_hash || '',
+                    metadata: paymentAsset.Item.metadata || null,
+                },
+            });
 
         // A list of all addresses used to gather inputs
         const usedAddresses: string[] = [];

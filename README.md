@@ -47,8 +47,9 @@
         <li><a href="#creating-item-assets">Creating Item Assets</a></li>
         <li><a href="#spending-tokens">Spending Tokens</a></li>
         <li><a href="#spending-items">Spending Items</a></li>
-        <li><a href="#fetching-pending-item-based-payments">Fetching Pending 2-Way Payments</a></li>
-        <li><a href="#responding-to-pending-item-based-payments">Responding to Pending 2-Way Payments</a></li>
+        <li><a href="#making-2-way-payments">Make 2-Way Payments</a></li>
+        <li><a href="#fetching-pending-2-way-payments">Fetching Pending 2-Way Payments</a></li>
+        <li><a href="#responding-to-pending-2-way-payments">Responding to Pending 2-Way Payments</a></li>
       </ul>
     </li>
     <li>
@@ -529,7 +530,7 @@ await makeItemPayment(
 
 ```
 
-**_NB_**: _The `makeItemPayment` method is similar to the `makeTokenPayment` in many regards, one of which being the fact that this method will send `Item` assets to a payment address in a unidirectional fashion and does not expect any assets in return. It should not be confused with **item-based** payments!_
+**_NB_**: _The `makeItemPayment` method is similar to the `makeTokenPayment` in many regards, one of which being the fact that this method will send `Item` assets to a payment address in a unidirectional fashion and does not expect any assets in return. It should not be confused with **2-way** payments!_
 
 ### Making 2-Way Payments
 
@@ -542,6 +543,7 @@ await makeItemPayment(
 | receivingAsset | `IAssetItem \| IAssetToken` |             | yes          | The asset to receive                         |
 | allKeypairs    | `IKeypairEncrypted[]`          |             | yes          | A list of all existing key-pairs (encrypted) |
 | receiveAddress | `IKeypairEncrypted`            |             | yes          | A keypair to assign the "receiving" asset to |
+| entryValueId | `String`            |             | yes          | A value id for a specific 2-way transaction entry |
 
 ```typescript
 import { Wallet } from '@2waychain/2wayjs';
@@ -573,6 +575,7 @@ const paymentResult = await make2WayPayment(
       receivingAsset,   // Receiving asset
       allKeypairs,      // All key-pairs
       receivingAddress, // Receive address
+      valueId
   );
 
   const { druid, encryptedTx } = paymentResult.content.make2WayPaymentResponse;
@@ -606,7 +609,7 @@ const paymentResult = await make2WayPayment(
     // Fetch pending item-based payments
     const pending2WayPaymentsResult = await wallet.fetchPending2WayPayments(
           allKeypairs,
-          allEncryptedTxs:,
+          allEncryptedTxs,
       )
 
     const pending2WayPayments: IResponseIntercom<IPendingIbTxDetails> = pending2WayPaymentsResult.content.fetchPendingRbResponse;
@@ -673,12 +676,12 @@ const paymentResult = await make2WayPayment(
     const allKeypairs = getKeyPairs();
 
     // Accept a item-based payment using its unique `DRUID` identifier
-    await wallet.accept2WayPayment('DRUID0xd0f407436f7f1fc494d7aee22939090e', pending2WayPayments, allKeypairs);
+    await wallet.accept2WayPayment('DRUID0xd0f407436f7f1fc494d7aee22939090e', pending2WayPayments, allKeypairs, valueId);
 
     <!-- --------------------------------- OR ---------------------------------- -->
 
     // Reject a item-based payment using its unique `DRUID` identifier
-    await wallet.reject2WayPayment('DRUID0xd0f407436f7f1fc494d7aee22939090e', pending2WayPayments, allKeypairs);
+    await wallet.reject2WayPayment('DRUID0xd0f407436f7f1fc494d7aee22939090e', pending2WayPayments, allKeypairs, valueId);
     ```
 
     2-Way transactions are accepted **or** rejected by passing their unique DRUID identifier as an argument to the corresponding methods.

@@ -14,7 +14,7 @@ import {
 import { getStringBytes } from '../utils';
 import { ITEM_DEFAULT } from './constants';
 import { constructAddress, createSignature } from './key.mgmt';
-import { constructTxInSignableAssetHash } from './script.mgmt';
+import { constructTxInSignableAssetHash, updateSignatures } from './script.mgmt';
 import { createTx, getInputsForTx } from './tx.mgmt';
 
 /* -------------------------------------------------------------------------- */
@@ -66,18 +66,18 @@ export function createItemPayload(
 }
 
 /**
- * Create one "half" of a item-based payment
+ * Create one "half" of a 2 way payment
  *
  * @export
  * @param {IFetchBalanceResponse} fetchBalanceResponse - Balance as received from the mempool node
- * @param {string} druid - Unique DRUID value associated with this transaction; needs to match the other "half" of this item-based payment
+ * @param {string} druid - Unique DRUID value associated with this transaction; needs to match the other "half" of this 2 way payment
  * @param {IDruidExpectation} senderExpectation - Expectation for the sender of this transaction
  * @param {IDruidExpectation} receiverExpectation - Expectation for the receiver of this transaction
  * @param {string} excessAddress - Address to send excess funds to (owned by sender of this "half" of the transaction)
  * @param {Map<string, IKeypair>} allKeypairs - Map of all keypairs
  * @return {*}  {IResult<ICreateTxPayload>}
  */
-export function createIbTxHalf(
+export function create2WTxHalf(
     fetchBalanceResponse: IFetchBalanceResponse,
     druid: string,
     senderExpectation: IDruidExpectation,
@@ -95,17 +95,13 @@ export function createIbTxHalf(
     // Construct DRUID info
     const druidInfo: IDruidValues = {
         druid,
-        participants: 2 /* This is a item-based payment, hence two participants */,
+        participants: 2 /* This is a 2 way payment, hence two participants */,
         expectations: [senderExpectation],
     };
 
+    const transaction = createTx(receiverExpectation.to, receiverExpectation.asset, excessAddress, druidInfo, txIns.value, locktime);
+    if (transaction.isErr()) return err(transaction.error);
+
     // Create the transaction
-    return createTx(
-        receiverExpectation.to,
-        receiverExpectation.asset,
-        excessAddress,
-        druidInfo,
-        txIns.value,
-        locktime,
-    );
+    return updateSignatures(transaction.value, fetchBalanceResponse, allKeypairs);
 }

@@ -8,7 +8,7 @@ import { HDPrivateKey } from 'bitcore-lib';
 export type IClientConfig = {
     mempoolHost?: string;
     storageHost?: string;
-    intercomHost?: string;
+    valenceHost?: string;
     passphrase: string /* Required */;
 };
 
