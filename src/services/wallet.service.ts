@@ -821,7 +821,6 @@ export class Wallet {
         receivingAsset: IAssetItem | IAssetToken,
         allKeypairs: IKeypairEncrypted[],
         receiveAddress: IKeypairEncrypted,
-        entryValueId: string,
     ): Promise<IClientResponse> {
         try {
             if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
@@ -887,8 +886,10 @@ export class Wallet {
                 mempoolHost: this.mempoolHost,
             };
 
-            const sendBody = generateValenceSetBody(paymentAddress, valuePayload, entryValueId)
+            const sendBody = generateValenceSetBody(paymentAddress, valuePayload, druid)
             const sendHeaders = generateVerificationHeaders(paymentAddress, senderKeypair)
+
+            console.log(sendHeaders, sendBody)
 
             // Send the transaction details to the valence server for the receiving party to inspect
             return await axios
@@ -1085,7 +1086,6 @@ export class Wallet {
         pendingResponse: IPending2WTxDetails,
         status: 'accepted' | 'rejected',
         allKeypairs: IKeypairEncrypted[],
-        entryValueId: string,
     ): Promise<IClientResponse> {
         try {
             if (!this.mempoolHost || !this.keyMgmt || !this.mempoolRoutesPoW)
@@ -1155,7 +1155,7 @@ export class Wallet {
             }
 
             // Send the updated status of the transaction on the valence server
-            const sendBody = generateValenceSetBody(txInfo.senderExpectation.to, txInfo, entryValueId)
+            const sendBody = generateValenceSetBody(txInfo.senderExpectation.to, txInfo, druid)
             const sendHeaders = generateVerificationHeaders(txInfo.senderExpectation.to, receiverKeypair)
 
             // Update the transaction details on the valence server
@@ -1193,9 +1193,8 @@ export class Wallet {
         druid: string,
         pendingResponse: IPending2WTxDetails,
         allKeypairs: IKeypairEncrypted[],
-        entryValueId: string,
     ): Promise<IClientResponse> {
-        return this.handle2WTxResponse(druid, pendingResponse, 'accepted', allKeypairs, entryValueId);
+        return this.handle2WTxResponse(druid, pendingResponse, 'accepted', allKeypairs);
     }
 
     /**
@@ -1212,9 +1211,8 @@ export class Wallet {
         druid: string,
         pendingResponse: IPending2WTxDetails,
         allKeypairs: IKeypairEncrypted[],
-        entryValueId: string,
     ): Promise<IClientResponse> {
-        return this.handle2WTxResponse(druid, pendingResponse, 'rejected', allKeypairs, entryValueId);
+        return this.handle2WTxResponse(druid, pendingResponse, 'rejected', allKeypairs);
     }
 
     /* -------------------------------------------------------------------------- */

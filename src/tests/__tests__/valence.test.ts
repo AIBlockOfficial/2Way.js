@@ -42,11 +42,11 @@ test('create items for 2 way payment', async () => {
     });
 });
 
-jest.setTimeout(20000);
+jest.setTimeout(30000);
 test('set_data', async () => {
-    console.log('Waiting for 5 seconds for funds to update...');
+    console.log('Waiting for 20 seconds for funds to update...');
 
-    await new Promise((r) => setTimeout(r, 5000));
+    await new Promise((r) => setTimeout(r, 20000));
 
     // Alice
     await walletInstance.fromSeed(seed, CONFIG).then((res) => {
@@ -80,8 +80,7 @@ test('set_data', async () => {
         sendItem, // Sending asset
         receiveItem, // Receiving asset
         [kp!], // Alice keypairs
-        kp!, // Alive kp addr
-        valueId
+        kp! // Alive kp addr
     ).then((res) => {
         console.log(res)
         expect(res.status).toBe('success');
@@ -104,13 +103,14 @@ test('get_data and accept', async () => {
             return res.content!.fetchPending2WResponse;
         return null;
     });
+    console.log(encryptedTx.druid)
 
-    let entry = (result as any).test;
+    let entry = (result as any)[encryptedTx.druid];
 
     console.log('Entry: ', entry);
 
     // Accept
-    await walletInstance.accept2WayPayment(entry.data.druid, entry.data, [kp2!], valueId).then((res) => {
+    await walletInstance.accept2WayPayment(entry.data.druid, entry.data, [kp2!]).then((res) => {
         console.log(res)
         expect(res.status).toBe('success');
     })
