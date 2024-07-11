@@ -3,7 +3,7 @@ import {
     IAssetToken,
     IAssetItem,
     IDruidExpectation,
-    IPendingIbTxDetails,
+    IPending2WTxDetails,
     IResult,
     IErrorInternal,
     IApiCreateTxResponse,
@@ -77,16 +77,16 @@ export function initIDruidExpectation(options?: Partial<IDruidExpectation>): IDr
 }
 
 /**
- * Initialize an empty structure of type `IPendingIbTxDetails`, providing optional additional values
+ * Initialize an empty structure of type `IPending2WTxDetails`, providing optional additional values
  *
  * @export
- * @param {Partial<IPendingIbTxDetails>} [options] - Optional additional values to initialize the structure with
- * @return {*}  {IPendingIbTxDetails}
+ * @param {Partial<IPending2WTxDetails>} [options] - Optional additional values to initialize the structure with
+ * @return {*}  {IPending2WTxDetails}
  */
-export function initIPendingIbTxDetails(
-    options?: Partial<IPendingIbTxDetails>,
-): IPendingIbTxDetails {
-    const defaults: IPendingIbTxDetails = {
+export function initIPending2WTxDetails(
+    options?: Partial<IPending2WTxDetails>,
+): IPending2WTxDetails {
+    const defaults: IPending2WTxDetails = {
         druid: '',
         senderExpectation: initIDruidExpectation(),
         receiverExpectation: initIDruidExpectation(),
@@ -254,13 +254,14 @@ export const isOfTypeIAssetItem = (value: any): value is IAssetItem =>
     isOfType<IAssetItem>(value, initIAssetItem());
 
 /**
- *   Determine whether the provided value is of type `IPendingIbTxDetails`
+ *   Determine whether the provided value is of type `IPending2WTxDetails`
  *
  * @param {*} value
- * @return {*}  {value is IPendingIbTxDetails}
+ * @return {*}  {value is IPending2WTxDetails} (: value is IPending2WTxDetails)
  */
-export const isOfTypeIPendingIbTxDetails = (value: any): value is IPendingIbTxDetails =>
-    isOfType<IPendingIbTxDetails>(value, initIPendingIbTxDetails());
+export const isOfTypeIPending2WTxDetails = (value: any) => {
+    return isOfType<IPending2WTxDetails>(value, initIPending2WTxDetails());
+}
 
 /**
  *
@@ -270,10 +271,11 @@ export const isOfTypeIPendingIbTxDetails = (value: any): value is IPendingIbTxDe
  * @param {*} testAgainst
  * @return {*}  {arg is T}
  */
-export const isOfType = <T>(arg: any, testAgainst: any): arg is T =>
-    Object.entries(testAgainst).every(
-        ([key]) => key in arg && typeof arg[key] === typeof testAgainst[key],
+export const isOfType = <T>(arg: any, testAgainst: any): arg is T => {
+    return Object.entries(testAgainst).every(
+        ([key]) => { return key in arg && typeof arg[key] === typeof testAgainst[key] },
     );
+}
 
 /**
  * Determine whether two assets are of type `IAssetToken`

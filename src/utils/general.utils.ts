@@ -1,4 +1,5 @@
 import { sha3_256 } from 'js-sha3';
+import { Buffer } from 'buffer';
 import { err, ok } from 'neverthrow';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -6,11 +7,21 @@ import { BAL_LIMIT } from '../mgmt/constants';
 
 import {
     IClientResponse,
-    ICustomKeyPair,
     IErrorInternal,
-    IPendingIbTxDetails,
+    IPending2WTxDetails,
     IResult,
 } from '../interfaces';
+
+type TypedArray =
+    | Int8Array
+    | Uint8Array
+    | Uint8ClampedArray
+    | Int16Array
+    | Uint16Array
+    | Int32Array
+    | Uint32Array
+    | Float32Array
+    | Float64Array;
 
 /**
  * Cast `status` received from 2 Way network to lowercase string variant
@@ -119,7 +130,7 @@ export function truncateByBytesUTF8(chars: string, n: number): string {
         try {
             return fromBytesUTF8(bytes);
             // eslint-disable-next-line no-empty
-        } catch (e) {}
+        } catch (e) { }
         bytes = bytes.substring(0, bytes.length - 1);
     }
 }
@@ -136,8 +147,8 @@ export function typedArrayToBuffer(array: Uint8Array): ArrayBuffer {
  * @returns
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function concatTypedArrays(a: any, b: any) {
-    const c = new a.constructor(a.length + b.length);
+export function concatTypedArrays<T extends TypedArray>(a: T, b: T): T {
+    const c = new (a.constructor as { new (length: number): T })(a.length + b.length);
     c.set(a, 0);
     c.set(b, a.length);
     return c;
@@ -245,44 +256,15 @@ export function createIdAndNonceHeaders(difficulty?: number): {
 export const getUniqueID = (): string => uuidv4().replace(/-/gi, '').toString().substring(0, 32);
 
 /**
- * Format a `{[key: K]: V}` object into a `{key :K, value: V}` object
- *
- * ### Note
- *
- * This function assumes that the provided parameter only has one key-value pair
- *
- * @template K - key type
- * @template T - value type
- * @param {ICustomKeyPair<K, T>} v
- * @return {*}  {IResult<{
- *     key: K;
- *     value: T;
- * }>}
- */
-export const formatSingleCustomKeyValuePair = <K extends string | number | symbol, T>(
-    v: ICustomKeyPair<K, T>,
-): IResult<{
-    key: K;
-    value: T;
-}> => {
-    if (Object.entries(v).length !== 1) return err(IErrorInternal.KeyValuePairNotSingle);
-    const returnValue = {
-        key: Object.keys(v)[0] as K,
-        value: Object.values(v)[0] as T,
-    };
-    return ok(returnValue);
-};
-
-/**
  * Adds sensible defaults to asset structures for receiving and sending in 2 way transactions. Ensures
  * error handling for missing fields.
  *
- * @param {IPendingIbTxDetails} txStructure
- * @return {*}  {IResult<IPendingIbTxDetails>}
+ * @param {IPending2WTxDetails} txStructure
+ * @return {*}  {IResult<IPending2WTxDetails>}
  */
 export const formatAssetStructures = (
-    txStructure: IPendingIbTxDetails,
-): IResult<IPendingIbTxDetails> => {
+    txStructure: IPending2WTxDetails,
+): IResult<IPending2WTxDetails> => {
     const defaults = {
         amount: 0,
         genesis_hash: null,

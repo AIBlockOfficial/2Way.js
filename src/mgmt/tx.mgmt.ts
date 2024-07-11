@@ -31,6 +31,7 @@ import {
 import { NETWORK_VERSION } from './constants';
 import { getAddressVersion } from './key.mgmt';
 import { constructSignature, constructTxInOutSignableHash, updateSignatures } from './script.mgmt';
+import { validateAsset, validateAddress } from '../utils/validations.utils';
 
 /* -------------------------------------------------------------------------- */
 /*                          Transaction Construction                          */
@@ -57,24 +58,28 @@ export function getInputsForTx(
     fetchBalanceResponse: IFetchBalanceResponse,
     allKeypairs: Map<string, IKeypair>,
 ): IResult<IGetInputsResult> {
+    // Perform validation checks
+    const validPaymentAsset = validateAsset(paymentAsset);
+    if (validPaymentAsset.error) return err(IErrorInternal.InvalidInputs);
+
     // Check to see if there's enough funds
     const isOfTypeAssetToken = isOfType<IAssetToken>(paymentAsset, initIAssetToken());
     const enoughRunningTotal = isOfTypeAssetToken
         ? paymentAsset.Token <= fetchBalanceResponse.total.tokens
         : paymentAsset.Item.amount <=
-          fetchBalanceResponse.total.items[paymentAsset.Item.genesis_hash];
+        fetchBalanceResponse.total.items[paymentAsset.Item.genesis_hash];
 
     if (enoughRunningTotal) {
         // Initialize the total amount gathered; apply DRS transaction hash where required
         let totalAmountGathered: IAssetToken | IAssetItem = isOfTypeAssetToken
             ? initIAssetToken()
             : initIAssetItem({
-                  Item: {
-                      amount: 0,
-                      genesis_hash: paymentAsset.Item.genesis_hash || '',
-                      metadata: paymentAsset.Item.metadata || null,
-                  },
-              });
+                Item: {
+                    amount: 0,
+                    genesis_hash: paymentAsset.Item.genesis_hash || '',
+                    metadata: paymentAsset.Item.metadata || null,
+                },
+            });
 
         // A list of all addresses used to gather inputs
         const usedAddresses: string[] = [];
@@ -137,7 +142,7 @@ export function getInputsForTx(
                         if (!usedAddresses.includes(address)) usedAddresses.push(address);
 
                         usedOutpointsCount++;
-                        if (outPoints.length == usedOutpointsCount) {
+                        if (outPoints.length === usedOutpointsCount) {
                             // We have used all of the inputs this address has to offer,
                             // so we can add this address to the used addresses list
                             depletedAddresses.push(address);
@@ -189,7 +194,17 @@ export function createTx(
     excessAddress: string,
     druidInfo: IDruidValues | null,
     txIns: IGetInputsResult,
+    locktime: number,
 ): IResult<ICreateTxPayload> {
+    // Perform validation checks
+    const validPaymentAddress = validateAddress(paymentAddress);
+    const validExcessAddress = validateAddress(excessAddress);
+    const validPaymentAsset = validateAsset(paymentAsset);
+
+    if (validPaymentAddress.error || validExcessAddress.error || validPaymentAsset.error) {
+        return err(IErrorInternal.InvalidInputs);
+    }
+
     // Inputs obtained for payment from fetching the balance from the network
     // TODO: Do something with `depletedAddresses`
     const { usedAddresses, totalAmountGathered, inputs } = txIns;
@@ -203,7 +218,7 @@ export function createTx(
     const outputs: ITxOut[] = [
         {
             value: paymentAsset,
-            locktime: 0,
+            locktime,
             script_public_key: paymentAddress,
         },
     ];
@@ -257,12 +272,20 @@ export function createPaymentTx(
     excessAddress: string,
     fetchBalanceResponse: IFetchBalanceResponse,
     allKeypairs: Map<string, IKeypair>,
+    locktime: number,
 ): IResult<ICreateTxPayload> {
     // Gather inputs for the transaction
     const txIns = getInputsForTx(paymentAsset, fetchBalanceResponse, allKeypairs);
     if (txIns.isErr()) return err(txIns.error);
 
-    const transaction = createTx(paymentAddress, paymentAsset, excessAddress, null, txIns.value);
+    const transaction = createTx(
+        paymentAddress,
+        paymentAsset,
+        excessAddress,
+        null,
+        txIns.value,
+        locktime,
+    );
     if (transaction.isErr()) return err(transaction.error);
 
     // Update signatures

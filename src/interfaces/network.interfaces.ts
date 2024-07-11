@@ -31,7 +31,7 @@ export type IContentType = {
     newDRUIDResponse?: string;
     newSeedPhraseResponse?: string;
     getSeedPhraseResponse?: string;
-    make2WayPaymentResponse?: IMakeIbPaymentResponse;
+    make2WayPaymentResponse?: IMake2WPaymentResponse;
     newKeypairResponse?: IKeypairEncrypted;
     getMasterKeyResponse?: IMasterKeyEncrypted;
     initNewResponse?: INewWalletResponse;
@@ -43,12 +43,11 @@ export type IContentType = {
     getKeypairsResponse?: IKeypairEncrypted[];
 } & IApiContentType;
 
-// Content received from mempool node / intercom server API endpoints
+// Content received from mempool node / valence server API endpoints
 export type IApiContentType = {
     fetchBalanceResponse?: IFetchBalanceResponse;
-    fetchPending2WayResponse?: IFetchPending2WayResponse;
     createItemResponse?: ICreateItemResponse;
-    fetchPendingIbResponse?: IResponseIntercom<IPendingIbTxDetails>;
+    fetchPending2WResponse?: IPending2WResponse;
     debugDataResponse?: IDebugDataResponse;
     fetchTransactionsResponse?: IFetchTransactionsResponse;
     makePaymentResponse?: IMakePaymentResponse;
@@ -63,10 +62,10 @@ export enum IAPIRoute {
     FetchPending = '/fetch_pending',
     /* --------------------------- Storage Network Routes --------------------------- */
     BlockchainEntry = '/blockchain_entry',
-    /* ----------------------------- Intercom Routes ---------------------------- */
-    IntercomSet = '/set_data',
-    IntercomGet = '/get_data',
-    IntercomDel = '/del_data',
+    /* ----------------------------- Valence Routes ---------------------------- */
+    ValenceSet = '/set_data',
+    ValenceGet = '/get_data',
+    ValenceDel = '/del_data',
 }
 
 /* -------------------------------------------------------------------------- */
@@ -157,42 +156,28 @@ export type ICreateTxPayload = {
 };
 
 /* -------------------------------------------------------------------------- */
-/*                          Intercom Interfaces                         */
+/*                          Valence Interfaces                                */
 /* -------------------------------------------------------------------------- */
 
-export type IResponseIntercom<T> = {
-    // Address that placed the data : IRedisFieldEntry<T>;
-    [key: string]: IRedisFieldEntry<T>;
+export type IRequestValenceResponse = {
+    status: 'Success' | 'Error' | 'InProgress' | 'Unknown';
+    reason?: string;
+    route?: string;
+    content?: IApiContentType;
 };
 
-export type IRequestIntercomSetBody<T> = {
-    key: string;
-    field: string;
-    publicKey: string;
-    signature: string;
-    value: T;
+export type IRequestValenceSetBody<T> = {
+    address: string;
+    data: T;
 };
 
-export type IRequestIntercomDelBody = {
-    key: string;
-    field: string;
-    publicKey: string;
-    signature: string;
+export type IPending2WResponse = {
+    address: string,
+    data: IPending2WTxDetails
 };
 
-export type IRequestIntercomGetBody = {
-    key: string;
-    publicKey: string;
-    signature: string;
-};
-
-export type IRedisFieldEntry<T> = {
-    timestamp: number;
-    value: T;
-};
-
-// NOTE: This data structure can be changed to anything and it will still be supported by the intercom server
-export type IPendingIbTxDetails = {
+// NOTE: This data structure can be changed to anything and it will still be supported by the valence server
+export type IPending2WTxDetails = {
     druid: string; // Value to bind transactions together
     senderExpectation: IDruidExpectation;
     receiverExpectation: IDruidExpectation;
@@ -203,8 +188,8 @@ export type IPendingIbTxDetails = {
 /* -------------------------------------------------------------------------- */
 /*                     Wallet Response Interfaces                    */
 /* -------------------------------------------------------------------------- */
-// Make item-based payment response
-export type IMakeIbPaymentResponse = {
+// Make 2 way payment response
+type IMake2WPaymentResponse = {
     druid: string;
     encryptedTx: ICreateTransactionEncrypted;
 };

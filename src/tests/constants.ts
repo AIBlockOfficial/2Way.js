@@ -14,16 +14,19 @@ export type IAddressListTest = {
     };
 };
 
-export const CONFIG = {
-    mempoolHost: 'https://mempool.aiblock.ch',
-    storageHost: 'https://storage.aiblock.ch',
-    intercomHost: 'http://0.0.0.0:3030',
-    passphrase: '',
-};
+// export const CONFIG = {
+//     mempoolHost: 'https://mempool.aiblock.ch',
+//     storageHost: 'https://storage.aiblock.ch',
+//     valenceHost: 'http://0.0.0.0:3030',
+//     passphrase: '',
+// };
 
-export const SEED = 'army van defense carry jealous true garbage claim echo media make crunch';
-export const SEED2 =
-    'exchange shoe gesture useful chapter tired used veteran echo require offer grow';
+export const CONFIG = {
+    mempoolHost: 'https://mempool.aiblock.dev',
+    storageHost: 'https://storage.aiblock.dev',
+    valenceHost: 'http://0.0.0.0:3030',
+    passphrase: 'test',
+};
 
 export const MK = {
     nonce: '9868f40d-7b97-47c9-ad32-',

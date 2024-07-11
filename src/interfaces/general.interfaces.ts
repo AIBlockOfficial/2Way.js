@@ -1,3 +1,5 @@
+import { HDPrivateKey } from 'bitcore-lib';
+
 /* -------------------------------------------------------------------------- */
 /*                       Interfaces for Wallet                       */
 /* -------------------------------------------------------------------------- */
@@ -6,7 +8,7 @@
 export type IClientConfig = {
     mempoolHost?: string;
     storageHost?: string;
-    intercomHost?: string;
+    valenceHost?: string;
     passphrase: string /* Required */;
 };
 
@@ -32,7 +34,7 @@ export type ICustomKeyPair<K extends string | number | symbol, T> = {
 // Master key
 export type IMasterKey = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    secret: any; // bitcore-nemonic HDPrivateKey
+    secret: HDPrivateKey; // bitcore-nemonic HDPrivateKey
     seed: string;
 };
 
@@ -70,7 +72,7 @@ export type ITransaction = {
 export type ITxIn = {
     previous_out: IOutPoint | null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    script_signature: any | null;
+    script_signature: Script | null;
 };
 
 // OutPoint

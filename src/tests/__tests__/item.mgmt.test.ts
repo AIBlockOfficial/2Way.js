@@ -75,7 +75,7 @@ test('creates a valid payload to create items', () => {
     }
 });
 
-test('create transaction for the SEND portion of a item-based payment', () => {
+test('create transaction for the SEND portion of a 2 way payment', () => {
     const keyPairMap = new Map<string, IKeypair>();
     for (const addr of Object.keys(ADDRESS_LIST_TEST)) {
         keyPairMap.set(addr, {
@@ -86,7 +86,7 @@ test('create transaction for the SEND portion of a item-based payment', () => {
         });
     }
 
-    const createTransaction = itemMgmt.createIbTxHalf(
+    const createTransaction = itemMgmt.create2WTxHalf(
         FETCH_BALANCE_RESPONSE_TEST,
         'full_druid',
         initIDruidExpectation({
@@ -109,6 +109,7 @@ test('create transaction for the SEND portion of a item-based payment', () => {
         }),
         'excess_address',
         keyPairMap,
+        0,
     );
 
     if (createTransaction.isOk()) {
@@ -170,9 +171,9 @@ test('create transaction for the SEND portion of a item-based payment', () => {
                 {
                     Pay2PkH: {
                         signable_data:
-                            '2769799af59a8accc12ded7fbe478c84d8f97f7754a15a52907067d7bd9e6141',
+                            '39c7bcf3e5bb477898207c73efd558a0d87baa41b540977b452fe6f1cdc8419e',
                         signature:
-                            '45b330c86b7c9e6e78d2b5baad354a6def2baabeb473e5a80ce037717664d8af3c474717d356b3b882f9fd2b0d3d25ee5122624aa1edbebf33dcb8a0bad31b08',
+                            '860b77cf4cda825ec7b395d7282d580049ee69f351076afd008af552ca78b35c1540d9e152d32726179077f9906264b962090aca8d2b3d425226b8832934730d',
                         public_key:
                             '5e6d463ec66d7999769fa4de56f690dfb62e685b97032f5926b0cb6c93ba83c6',
                         address_version: null,
@@ -181,9 +182,9 @@ test('create transaction for the SEND portion of a item-based payment', () => {
                 {
                     Pay2PkH: {
                         signable_data:
-                            'c8e18ee7486bdee91e8d5c2d9f97ee3a23a686ac2ba4723f602bdc1fde91cae5',
+                            '554169479da2e0948f19152b1ea7feda04319f60273fcffe2d2f23efde9cca79',
                         signature:
-                            '785d42e8063fbe8201cca1b70e4c7c2708d2a50d9456c0f95f86780eb81f1b3d453f5d3e5581fd7d827acc835aec5b7abacfd3c13431b3191ae861a52a45fd0a',
+                            '6a51d2554375f8c73c6888a151c131ff9ad5fbda938f2e02870b9394ce777f64be95e15eec351eaf256b795c28235f63c7d34e873df22d91f7e016b320448807',
                         public_key:
                             '58272ba93c1e79df280d4c417de47dbf6a7e330ba52793d7baa8e00ae5c34e59',
                         address_version: null,
@@ -192,9 +193,9 @@ test('create transaction for the SEND portion of a item-based payment', () => {
                 {
                     Pay2PkH: {
                         signable_data:
-                            '8dd573baa284b30ef9e1f874eabe4415eb8fc819285e82d871c24215c6b3c2d9',
+                            'd36fdf205e6b3a5c3dc19a14b8398a656dabeb6db18d6046dbb7a734b4cb369f',
                         signature:
-                            '5578bf247e0359155370b08131ed4a6bc08174af118e2b74ffb893f683859de539a29725a38a5010cd3b4c98df3c9a97d5865d048eb503b291ca87c97a19ce0c',
+                            '57961d06470c0e029365d4962fc4ca8e8f54b47edea98c05d8c309f589a546381ddd98c90a00bf7cb377877d05aeecd60334b9e780ebddb78df27ddae7bea20e',
                         public_key:
                             'efa9dcba0f3282b3ed4a6aa1ccdb169d6685a30d7b2af7a2171a5682f3112359',
                         address_version: null,
@@ -227,7 +228,7 @@ test('create transaction for the SEND portion of a item-based payment', () => {
     }
 });
 
-test('create transaction for the RECEIVE portion of a item-based payment', () => {
+test('create transaction for the RECEIVE portion of a 2 way payment', () => {
     const keyPairMap = new Map<string, IKeypair>();
     for (const addr of Object.keys(ADDRESS_LIST_TEST)) {
         keyPairMap.set(addr, {
@@ -238,7 +239,7 @@ test('create transaction for the RECEIVE portion of a item-based payment', () =>
         });
     }
 
-    const createTransaction = itemMgmt.createIbTxHalf(
+    const createTransaction = itemMgmt.create2WTxHalf(
         FETCH_BALANCE_RESPONSE_TEST,
         'full_druid',
         initIDruidExpectation({
@@ -261,6 +262,7 @@ test('create transaction for the RECEIVE portion of a item-based payment', () =>
         }),
         'excess_address',
         keyPairMap,
+        0,
     );
 
     if (createTransaction.isOk()) {
@@ -325,9 +327,9 @@ test('create transaction for the RECEIVE portion of a item-based payment', () =>
                 {
                     Pay2PkH: {
                         signable_data:
-                            'c636d18e5db19794dd4510b7d16e53ac7eeded2049b6d3dfbe53f0d7f3cfabde',
+                            '7221a1476f584201d2dc8514a899eb7e38bb32f5ae176abb61c709f1ee690b9e',
                         signature:
-                            'cad58b35e1f4854621b9b327ce6d4c5dc3b3a4660e0f2a346f1156de5c4bdd1a9b29a437a56c0b13ccca9ae9d20a216515f041bf647f216279d16aac04a96900',
+                            '3698b94d5d99b255d04e97c9c9e8d6acce12742aade05d3673b310e18484ea6b6f1a74eaedc42f35d5bcb4f65758ab3bad93c2c33702792814dbe67ea5225106',
                         public_key:
                             '5e6d463ec66d7999769fa4de56f690dfb62e685b97032f5926b0cb6c93ba83c6',
                         address_version: null,

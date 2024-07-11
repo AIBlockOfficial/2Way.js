@@ -64,10 +64,10 @@ export enum IErrorInternal {
     UnableToDecryptTransaction = 'Unable to decrypt transaction',
     InvalidSeedPhrase = 'Invalid seed phrase',
     InvalidDRUIDProvided = 'Invalid DRUID value provided',
-    UnableToFilterIntercomData = 'Unable to filter intercom data',
+    UnableToFilterValenceData = 'Unable to filter valence data',
     ClientNotInitialized = 'Client not initialized',
     StorageNotInitialized = 'Storage host not initialized',
-    IntercomNotInitialized = 'Intercom host not initialized',
+    ValenceNotInitialized = 'Valence host not initialized',
     FetchBalanceResponseEmpty = 'Balance object is empty',
     NoDRUIDValues = 'DRUID values are null',
     AssetsIncompatible = 'Assets are incompatible',
@@ -80,6 +80,7 @@ export enum IErrorInternal {
     NoKeypairsProvided = 'No key-pairs provided',
     NoPassPhraseProvided = 'No passphrase provided',
     NoComputeHostProvided = 'No compute host provided',
+    NoContentReturned = 'No content returned',
     UnknownError = 'Unknown Error',
 }
 
