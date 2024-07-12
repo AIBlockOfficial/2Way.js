@@ -42,24 +42,16 @@ test('create items for 2 way payment', async () => {
     });
 });
 
-jest.setTimeout(30000);
+jest.setTimeout(15000);
 test('set_data', async () => {
-    console.log('Waiting for 20 seconds for funds to update...');
-
-    await new Promise((r) => setTimeout(r, 20000));
+    console.log('Waiting for 10 seconds for funds to update...');
+    await new Promise((r) => setTimeout(r, 10000));
 
     // Alice
     await walletInstance.fromSeed(seed, CONFIG).then((res) => {
         expect(res.status).toBe('success');
     });
     const kp = walletInstance.getNewKeypair([]).content?.newKeypairResponse;
-
-    // Bob
-    await walletInstance2.fromSeed(seed2, CONFIG).then((res) => {
-        expect(res.status).toBe('success');
-    });
-    const kp2 = walletInstance2.getNewKeypair([]).content?.newKeypairResponse;
-
     const sendItem = {
         "Item": {
             "amount": 1,
@@ -67,6 +59,12 @@ test('set_data', async () => {
             "metadata": null
         }
     }
+
+    // Bob
+    await walletInstance2.fromSeed(seed2, CONFIG).then((res) => {
+        expect(res.status).toBe('success');
+    });
+    const kp2 = walletInstance2.getNewKeypair([]).content?.newKeypairResponse;
     const receiveItem = {
         "Item": {
             "amount": 1,
@@ -82,7 +80,7 @@ test('set_data', async () => {
         [kp!], // Alice keypairs
         kp! // Alive kp addr
     ).then((res) => {
-        console.log(res)
+        console.log('set', res)
         expect(res.status).toBe('success');
         return res.content!.make2WayPaymentResponse;
     });
@@ -107,11 +105,9 @@ test('get_data and accept', async () => {
 
     let entry = (result as any)[encryptedTx.druid];
 
-    console.log('Entry: ', entry);
-
     // Accept
     await walletInstance.accept2WayPayment(entry.data.druid, entry.data, [kp2!]).then((res) => {
-        console.log(res)
+        console.log('accept result', res)
         expect(res.status).toBe('success');
     })
 

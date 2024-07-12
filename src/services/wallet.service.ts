@@ -889,7 +889,7 @@ export class Wallet {
             const sendBody = generateValenceSetBody(paymentAddress, valuePayload, druid)
             const sendHeaders = generateVerificationHeaders(paymentAddress, senderKeypair)
 
-            console.log(sendHeaders, sendBody)
+            console.log('set', sendHeaders, sendBody)
 
             // Send the transaction details to the valence server for the receiving party to inspect
             return await axios
@@ -950,6 +950,8 @@ export class Wallet {
 
             const kp = throwIfErr(this.keyMgmt.decryptKeypair(keypair));
             const sendHeaders = generateVerificationHeaders(keypair.address, kp)
+
+            console.log('fetch', sendHeaders)
 
             // Get pending 2WT transactions
             const fetched2WTx = await axios
@@ -1157,6 +1159,8 @@ export class Wallet {
             // Send the updated status of the transaction on the valence server
             const sendBody = generateValenceSetBody(txInfo.senderExpectation.to, txInfo, druid)
             const sendHeaders = generateVerificationHeaders(txInfo.senderExpectation.to, receiverKeypair)
+
+            console.log('accept', sendHeaders, sendBody)
 
             // Update the transaction details on the valence server
             await axios
