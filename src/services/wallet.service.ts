@@ -45,10 +45,8 @@ import {
     validateSeedphrase,
     validateTransactionHash,
     validateMetadata,
-    validateDruid,
     validateKeypairEncrypted,
     validateURL,
-    validateAsset,
 } from '../utils/validations.utils';
 import { mgmtClient } from './mgmt.service';
 import { ADDRESS_VERSION } from '../mgmt/constants';
@@ -175,12 +173,18 @@ export class Wallet {
         config: IClientConfig,
         initOffline = false,
     ): Promise<IClientResponse> {
+        console.log('[Wallet.fromSeed] Validating inputs...'); // Log 1
         const validConfig = validateConfig(config);
         const validSeedphrase = validateSeedphrase(seedPhrase);
+        console.log('[Wallet.fromSeed] validConfig:', JSON.stringify(validConfig, null, 2)); // Log 2
+        console.log('[Wallet.fromSeed] validSeedphrase:', JSON.stringify(validSeedphrase, null, 2)); // Log 3
+
         if (validConfig.error || validSeedphrase.error) {
+            console.log('[Wallet.fromSeed] Validation FAILED. Calling handleValidationFailures.'); // Log 4
             return handleValidationFailures([validConfig.error, validSeedphrase.error]);
         }
 
+        console.log('[Wallet.fromSeed] Validation PASSED. Initializing mgmtClient...'); // Log 5
         this.keyMgmt = new mgmtClient();
         const initIResult = this.keyMgmt.fromSeed(seedPhrase, config.passphrase);
         if (!initOffline) {
@@ -805,16 +809,16 @@ export class Wallet {
     /* -------------------------------------------------------------------------- */
 
     /**
- * Make a 2 way payment to a specified address
- *
- * @param {string} paymentAddress - Address to make the payment to
- * @param {(IAssetItem | IAssetToken)} sendingAsset - The asset to pay
- * @param {(IAssetItem | IAssetToken)} receivingAsset - The asset to receive
- * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
- * @param {IKeypairEncrypted} receiveAddress - A key-pair to assign the "receiving" asset to
- * @return {*}  {Promise<IClientResponse>}
- * @memberof Wallet
- */
+     * Make a 2 way payment to a specified address
+     *
+     * @param {string} paymentAddress - Address to make the payment to
+     * @param {(IAssetItem | IAssetToken)} sendingAsset - The asset to pay
+     * @param {(IAssetItem | IAssetToken)} receivingAsset - The asset to receive
+     * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
+     * @param {IKeypairEncrypted} receiveAddress - A key-pair to assign the "receiving" asset to
+     * @return {*}  {Promise<IClientResponse>}
+     * @memberof Wallet
+     */
     public async make2WayPayment(
         paymentAddress: string,
         sendingAsset: IAssetItem | IAssetToken,
@@ -862,7 +866,7 @@ export class Wallet {
                     receiverExpectation,
                     senderKeypair.address,
                     keyPairMap,
-                    0
+                    0,
                 ),
             );
 
@@ -886,17 +890,18 @@ export class Wallet {
                 mempoolHost: this.mempoolHost,
             };
 
-            const sendBody = generateValenceSetBody(paymentAddress, valuePayload, druid)
-            const sendHeaders = generateVerificationHeaders(paymentAddress, senderKeypair)
+            const sendBody = generateValenceSetBody(paymentAddress, valuePayload, druid);
+            const sendHeaders = generateVerificationHeaders(paymentAddress, senderKeypair);
 
-            console.log(sendHeaders, sendBody)
+            console.log(sendHeaders, sendBody);
 
             // Send the transaction details to the valence server for the receiving party to inspect
             return await axios
                 .post<IRequestValenceResponse>(
                     `${this.valenceHost}${IAPIRoute.ValenceSet}`,
                     sendBody,
-                    sendHeaders)
+                    sendHeaders,
+                )
                 .then(() => {
                     // Payment now getting processed
                     return {
@@ -923,13 +928,13 @@ export class Wallet {
     }
 
     /**
- * Fetch pending 2 way payments from the valence server
- *
- * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
- * @param {ICreateTransactionEncrypted[]} allEncryptedTxs - A list of all existing saved transactions (encrypted)
- * @return {*}  {Promise<IClientResponse>}
- * @memberof Wallet
- */
+     * Fetch pending 2 way payments from the valence server
+     *
+     * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
+     * @param {ICreateTransactionEncrypted[]} allEncryptedTxs - A list of all existing saved transactions (encrypted)
+     * @return {*}  {Promise<IClientResponse>}
+     * @memberof Wallet
+     */
     public async fetchPending2WayPayment(
         keypair: IKeypairEncrypted,
         allEncryptedTxs: ICreateTransactionEncrypted[] = [],
@@ -940,22 +945,20 @@ export class Wallet {
             if (!this.valenceHost) throw new Error(IErrorInternal.ValenceNotInitialized);
 
             // Generate a key-pair map
-            const [allAddresses, keyPairMap] = throwIfErr(
-                this.keyMgmt.getAllAddressesAndKeypairMap([keypair]),
-            );
+            const [, keyPairMap] = throwIfErr(this.keyMgmt.getAllAddressesAndKeypairMap([keypair]));
 
             // DRUID - Encrypted Transaction Mapping
             const encryptedTxMap = new Map<string, ICreateTransactionEncrypted>();
             allEncryptedTxs.forEach((tx) => encryptedTxMap.set(tx.druid, tx));
 
             const kp = throwIfErr(this.keyMgmt.decryptKeypair(keypair));
-            const sendHeaders = generateVerificationHeaders(keypair.address, kp)
+            const sendHeaders = generateVerificationHeaders(keypair.address, kp);
 
             // Get pending 2WT transactions
             const fetched2WTx = await axios
                 .get<IRequestValenceResponse>(
                     `${this.valenceHost}${IAPIRoute.ValenceGet}`,
-                    sendHeaders
+                    sendHeaders,
                 )
                 .then((response) => {
                     if (!response.data.content) throw new Error(IErrorInternal.NoContentReturned);
@@ -966,18 +969,17 @@ export class Wallet {
                     else throw new Error(`${error}`);
                 });
 
-
             // Get accepted and rejected 2 way transactions
-            const accepted2WTxs: { key: string, value: IPending2WTxDetails }[] = [];
-            const rejected2WTxs: { key: string, value: IPending2WTxDetails }[] = [];
+            const accepted2WTxs: { key: string; value: IPending2WTxDetails }[] = [];
+            const rejected2WTxs: { key: string; value: IPending2WTxDetails }[] = [];
             const twoWayDataToDelete: any[] = [];
 
-
             Object.entries(fetched2WTx).forEach(([key, value]) => {
-                if ((value as IPending2WResponse).data.status === 'accepted') { // temps fix bad content type on valence
-                    accepted2WTxs.push({ key: key, value: (value as IPending2WResponse).data })
+                if ((value as IPending2WResponse).data.status === 'accepted') {
+                    // temps fix bad content type on valence
+                    accepted2WTxs.push({ key: key, value: (value as IPending2WResponse).data });
                 } else if ((value as IPending2WResponse).data.status === 'rejected') {
-                    rejected2WTxs.push({ key: key, value: (value as IPending2WResponse).data })
+                    rejected2WTxs.push({ key: key, value: (value as IPending2WResponse).data });
                 }
             });
 
@@ -1006,7 +1008,7 @@ export class Wallet {
                     if (!keyPair) throw new Error(IErrorInternal.UnableToGetKeypair);
 
                     twoWayDataToDelete.push(
-                        generateVerificationHeaders(acceptedTx.value.senderExpectation.to, keyPair)
+                        generateVerificationHeaders(acceptedTx.value.senderExpectation.to, keyPair),
                     );
                 }
 
@@ -1039,7 +1041,10 @@ export class Wallet {
                         const keyPair = keyPairMap.get(rejectedTx.value.senderExpectation.to);
                         if (!keyPair) throw new Error(IErrorInternal.UnableToGetKeypair);
                         twoWayDataToDelete.push(
-                            generateVerificationHeaders(rejectedTx.value.senderExpectation.to, keyPair)
+                            generateVerificationHeaders(
+                                rejectedTx.value.senderExpectation.to,
+                                keyPair,
+                            ),
                         );
                     }
                 }
@@ -1060,8 +1065,8 @@ export class Wallet {
                 reason: ISuccessInternal.Pending2WPaymentsFetched,
                 content: {
                     fetchPending2WResponse: fetched2WTx,
-                }
-            } as IClientResponse
+                },
+            } as IClientResponse;
         } catch (error) {
             return {
                 status: 'error',
@@ -1071,16 +1076,16 @@ export class Wallet {
     }
 
     /**
-    * Handle a 2 way payment by either accepting or rejecting the payment
-    *
-    * @private
-    * @param {string} druid - Unique DRUID value associated with this payment
-    * @param {IResponseValence<IPending2WTxDetails>} pendingResponse - Pending 2 way payments response as received from the valence server
-    * @param {('accepted' | 'rejected')} status - Status to se the payment to
-    * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
-    * @return {*}  {Promise<IClientResponse>}
-    * @memberof Wallet
-    */
+     * Handle a 2 way payment by either accepting or rejecting the payment
+     *
+     * @private
+     * @param {string} druid - Unique DRUID value associated with this payment
+     * @param {IResponseValence<IPending2WTxDetails>} pendingResponse - Pending 2 way payments response as received from the valence server
+     * @param {('accepted' | 'rejected')} status - Status to se the payment to
+     * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
+     * @return {*}  {Promise<IClientResponse>}
+     * @memberof Wallet
+     */
     private async handle2WTxResponse(
         druid: string,
         pendingResponse: IPending2WTxDetails,
@@ -1100,7 +1105,7 @@ export class Wallet {
             if (balance.status !== 'success' || !balance.content?.fetchBalanceResponse)
                 throw new Error(balance.reason);
 
-            const txInfo = (pendingResponse as any);
+            const txInfo = pendingResponse as any;
 
             // Get the key-pair assigned to this receiver address
             const receiverKeypair = keyPairMap.get(txInfo.receiverExpectation.to);
@@ -1121,7 +1126,7 @@ export class Wallet {
                         txInfo.senderExpectation, // What the other party can expect from us
                         receiverKeypair.address,
                         keyPairMap,
-                        0
+                        0,
                     ),
                 );
 
@@ -1155,14 +1160,15 @@ export class Wallet {
             }
 
             // Send the updated status of the transaction on the valence server
-            const sendBody = generateValenceSetBody(txInfo.senderExpectation.to, txInfo, druid)
-            const sendHeaders = generateVerificationHeaders(txInfo.senderExpectation.to, receiverKeypair)
+            const sendBody = generateValenceSetBody(txInfo.senderExpectation.to, txInfo, druid);
+            const sendHeaders = generateVerificationHeaders(
+                txInfo.senderExpectation.to,
+                receiverKeypair,
+            );
 
             // Update the transaction details on the valence server
             await axios
-                .post(`${this.valenceHost}${IAPIRoute.ValenceSet}`,
-                    sendBody,
-                    sendHeaders)
+                .post(`${this.valenceHost}${IAPIRoute.ValenceSet}`, sendBody, sendHeaders)
                 .catch(async (error) => {
                     if (error instanceof Error) throw new Error(error.message);
                     else throw new Error(`${error}`);
@@ -1181,14 +1187,14 @@ export class Wallet {
     }
 
     /**
-* Accept a 2 way payment
-*
-* @param {string} druid - Unique DRUID value associated with a 2 way payment
-* @param {IResponseValence<IPending2WTxDetails>} pendingResponse - 2-Way transaction(s) information as received from the valence server
-* @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
-* @return {*}  {Promise<IClientResponse>}
-* @memberof Wallet
-*/
+     * Accept a 2 way payment
+     *
+     * @param {string} druid - Unique DRUID value associated with a 2 way payment
+     * @param {IResponseValence<IPending2WTxDetails>} pendingResponse - 2-Way transaction(s) information as received from the valence server
+     * @param {IKeypairEncrypted[]} allKeypairs - A list of all existing key-pairs (encrypted)
+     * @return {*}  {Promise<IClientResponse>}
+     * @memberof Wallet
+     */
     public async accept2WayPayment(
         druid: string,
         pendingResponse: IPending2WTxDetails,
@@ -1353,13 +1359,13 @@ export class Wallet {
     }
 
     /**
- * Get information regarding the PoW required for all routes
- *
- * @private
- * @param {(string)} host - Host address to retrieve proof-of-work data from
- * @return {*}  {Promise<IClientResponse>}
- * @memberof Wallet
- */
+     * Get information regarding the PoW required for all routes
+     *
+     * @private
+     * @param {(string)} host - Host address to retrieve proof-of-work data from
+     * @return {*}  {Promise<IClientResponse>}
+     * @memberof Wallet
+     */
     private async getDebugData(host: string): Promise<IClientResponse> {
         const validHost = validateURL(host);
         if (validHost.error) return handleValidationFailures([validHost.error]);

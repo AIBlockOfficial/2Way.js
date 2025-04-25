@@ -1,6 +1,6 @@
 /* eslint-disable jest/no-conditional-expect */
-import nacl from 'tweetnacl';
-import { bytesToBase64 } from 'byte-base64';
+// import nacl from 'tweetnacl'; // Removed unused import
+// import { bytesToBase64 } from 'byte-base64'; // Removed unused import
 import * as keyMgmt from '../../mgmt/key.mgmt';
 import { TEMP_ADDRESS_VERSION, ADDRESS_VERSION, ADDRESS_VERSION_OLD } from '../../mgmt';
 import { getHexStringBytes } from '../../utils';

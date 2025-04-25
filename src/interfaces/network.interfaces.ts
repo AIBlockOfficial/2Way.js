@@ -172,8 +172,8 @@ export type IRequestValenceSetBody<T> = {
 };
 
 export type IPending2WResponse = {
-    address: string,
-    data: IPending2WTxDetails
+    address: string;
+    data: IPending2WTxDetails;
 };
 
 // NOTE: This data structure can be changed to anything and it will still be supported by the valence server

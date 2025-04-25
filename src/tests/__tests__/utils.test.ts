@@ -260,15 +260,11 @@ test('generate an valence set body', () => {
     // Setting data on the valence server needs to be of type `object`
     const dataToSet: object = { testValue: 'Hello!' };
     // Generate valence set body
-    const body = generateValenceSetBody<object>(
-        keypair.address,
-        dataToSet,
-        "data_id_test"
-    );
+    const body = generateValenceSetBody<object>(keypair.address, dataToSet, 'data_id_test');
     // Verify correct body structure
     expect(body).toStrictEqual({
         address: '18f70e4a53a7cfd7f82d0e1fc287a449872ec7489dba0dff86144df8609caeda',
         data: { testValue: 'Hello!' },
-        data_id: "data_id_test",
+        data_id: 'data_id_test',
     });
 });

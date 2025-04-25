@@ -261,7 +261,7 @@ export const isOfTypeIAssetItem = (value: any): value is IAssetItem =>
  */
 export const isOfTypeIPending2WTxDetails = (value: any) => {
     return isOfType<IPending2WTxDetails>(value, initIPending2WTxDetails());
-}
+};
 
 /**
  *
@@ -272,10 +272,10 @@ export const isOfTypeIPending2WTxDetails = (value: any) => {
  * @return {*}  {arg is T}
  */
 export const isOfType = <T>(arg: any, testAgainst: any): arg is T => {
-    return Object.entries(testAgainst).every(
-        ([key]) => { return key in arg && typeof arg[key] === typeof testAgainst[key] },
-    );
-}
+    return Object.entries(testAgainst).every(([key]) => {
+        return key in arg && typeof arg[key] === typeof testAgainst[key];
+    });
+};
 
 /**
  * Determine whether two assets are of type `IAssetToken`

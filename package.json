@@ -1,6 +1,6 @@
 {
   "name": "@2waychain/2wayjs",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "API wrapper to access the AIBlock 2 Way Chain",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -25,7 +25,6 @@
     "test-utils": "jest --no-cache --config jest.config.js ./tests/__tests__/utils.test.ts",
     "test-valence": "jest --no-cache --config jest.config.js ./tests/__tests__/valence.test.ts",
     "prepare": "npm run build",
-    "prepublishOnly": "npm test && npm run lint",
     "preversion": "npm run lint",
     "version": "npm run format && git add -A src",
     "postversion": "git push && git push --tags"

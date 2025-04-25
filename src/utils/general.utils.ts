@@ -1,16 +1,11 @@
 import { sha3_256 } from 'js-sha3';
 import { Buffer } from 'buffer';
-import { err, ok } from 'neverthrow';
+import { ok } from 'neverthrow';
 import { v4 as uuidv4 } from 'uuid';
 
 import { BAL_LIMIT } from '../mgmt/constants';
 
-import {
-    IClientResponse,
-    IErrorInternal,
-    IPending2WTxDetails,
-    IResult,
-} from '../interfaces';
+import { IClientResponse, IErrorInternal, IPending2WTxDetails, IResult } from '../interfaces';
 
 type TypedArray =
     | Int8Array
@@ -130,7 +125,7 @@ export function truncateByBytesUTF8(chars: string, n: number): string {
         try {
             return fromBytesUTF8(bytes);
             // eslint-disable-next-line no-empty
-        } catch (e) { }
+        } catch (e) {}
         bytes = bytes.substring(0, bytes.length - 1);
     }
 }

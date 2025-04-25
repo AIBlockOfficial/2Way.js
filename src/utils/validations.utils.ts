@@ -21,9 +21,12 @@ type PossibleValidationError = Joi.ValidationError | undefined;
 export const handleValidationFailures = (errors: PossibleValidationError[]) => {
     return {
         status: 'error',
-        reason: errors.reduce((acc, error) => {
-            return error ? acc + error.message + ', ' : '';
-        }, ''),
+        reason: errors
+            .reduce((acc, error) => {
+                return error ? acc + error.message + ', ' : acc;
+            }, '')
+            .trim()
+            .replace(/,$/, ''),
     } as IClientResponse;
 };
 

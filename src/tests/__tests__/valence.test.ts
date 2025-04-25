@@ -1,7 +1,7 @@
 import { CONFIG } from '../constants';
 import { Wallet } from '../../services/wallet.service';
 
-const valueId = 'test';
+// const valueId = 'test'; // Removed unused variable
 let walletInstance = new Wallet();
 let walletInstance2 = new Wallet();
 let seed = '';
@@ -61,31 +61,33 @@ test('set_data', async () => {
     const kp2 = walletInstance2.getNewKeypair([]).content?.newKeypairResponse;
 
     const sendItem = {
-        "Item": {
-            "amount": 1,
-            "genesis_hash": asset,
-            "metadata": null
-        }
-    }
+        Item: {
+            amount: 1,
+            genesis_hash: asset,
+            metadata: null,
+        },
+    };
     const receiveItem = {
-        "Item": {
-            "amount": 1,
-            "genesis_hash": asset2,
-            "metadata": null
-        }
-    }
+        Item: {
+            amount: 1,
+            genesis_hash: asset2,
+            metadata: null,
+        },
+    };
 
-    const result = await walletInstance.make2WayPayment(
-        kp2!.address, // Bob addr
-        sendItem, // Sending asset
-        receiveItem, // Receiving asset
-        [kp!], // Alice keypairs
-        kp! // Alive kp addr
-    ).then((res) => {
-        console.log(res)
-        expect(res.status).toBe('success');
-        return res.content!.make2WayPaymentResponse;
-    });
+    const result = await walletInstance
+        .make2WayPayment(
+            kp2!.address, // Bob addr
+            sendItem, // Sending asset
+            receiveItem, // Receiving asset
+            [kp!], // Alice keypairs
+            kp!, // Alive kp addr
+        )
+        .then((res) => {
+            console.log(res);
+            expect(res.status).toBe('success');
+            return res.content!.make2WayPaymentResponse;
+        });
     encryptedTx = result?.encryptedTx ? result.encryptedTx : { druid: '', nonce: '', save: '' };
 });
 
@@ -96,24 +98,21 @@ test('get_data and accept', async () => {
     });
     const kp2 = walletInstance.getNewKeypair([]).content?.newKeypairResponse;
 
-    const result = await walletInstance.fetchPending2WayPayment(
-        kp2!,
-    ).then((res) => {
-        if (res.content?.fetchPending2WResponse)
-            return res.content!.fetchPending2WResponse;
+    const result = await walletInstance.fetchPending2WayPayment(kp2!).then((res) => {
+        if (res.content?.fetchPending2WResponse) return res.content!.fetchPending2WResponse;
         return null;
     });
-    console.log(encryptedTx.druid)
+    console.log(encryptedTx.druid);
 
-    let entry = (result as any)[encryptedTx.druid];
+    const entry = (result as any)[encryptedTx.druid];
 
     console.log('Entry: ', entry);
 
     // Accept
     await walletInstance.accept2WayPayment(entry.data.druid, entry.data, [kp2!]).then((res) => {
-        console.log(res)
+        console.log(res);
         expect(res.status).toBe('success');
-    })
+    });
 
     // Reject
     // await walletInstance.reject2WayPayment(entry.data.druid, entry.data, [kp2!]).then((res) => {
@@ -130,12 +129,8 @@ test('get_data and validate', async () => {
 
     const kp = walletInstance.getNewKeypair([]).content?.newKeypairResponse;
 
-    await walletInstance.fetchPending2WayPayment(
-        kp!,
-        [encryptedTx]
-    ).then((res) => {
-        console.log('FINAL Result: ', res)
+    await walletInstance.fetchPending2WayPayment(kp!, [encryptedTx]).then((res) => {
+        console.log('FINAL Result: ', res);
         expect(res.status).toBe('success');
     });
 });
-

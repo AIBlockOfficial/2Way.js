@@ -99,7 +99,14 @@ export function create2WTxHalf(
         expectations: [senderExpectation],
     };
 
-    const transaction = createTx(receiverExpectation.to, receiverExpectation.asset, excessAddress, druidInfo, txIns.value, locktime);
+    const transaction = createTx(
+        receiverExpectation.to,
+        receiverExpectation.asset,
+        excessAddress,
+        druidInfo,
+        txIns.value,
+        locktime,
+    );
     if (transaction.isErr()) return err(transaction.error);
 
     // Create the transaction

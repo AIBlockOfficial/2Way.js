@@ -122,22 +122,30 @@ export class mgmtClient {
      * @memberof mgmtClient
      */
     public fromSeed(seedPhrase: string, passphraseKey: string): IResult<IMasterKeyEncrypted> {
+        console.log('seedPhrase', seedPhrase);
         // Perform validation checks
         const validPassphrase = validateMessage(passphraseKey);
         const validSeedphrase = validateSeedphrase(seedPhrase);
+
+        console.log('validPassphrase', validPassphrase);
+        console.log('validSeedphrase', validSeedphrase);
         if (validPassphrase.error || validSeedphrase.error)
             return err(IErrorInternal.InvalidInputs);
 
         // Continue with the decryption process
         const passphrase = getPassphraseBuffer(passphraseKey);
+        console.log('passphrase', passphrase);
         if (passphrase.isErr()) return err(passphrase.error);
         this.passphraseKey = passphrase.value;
         const newMasterKey = generateMasterKey(seedPhrase);
+        console.log('newMasterKey', newMasterKey);
         if (newMasterKey.isErr()) return err(newMasterKey.error);
         this.masterKey = newMasterKey.value;
         const saveIResult = this.encryptMasterKey(newMasterKey.value, passphrase.value);
+        console.log('saveIResult', saveIResult);
         if (saveIResult && saveIResult.isErr()) return err(saveIResult.error);
         this.seedPhrase = seedPhrase;
+        console.log('saveIResult.value', saveIResult.value);
         return ok(saveIResult.value);
     }
 
